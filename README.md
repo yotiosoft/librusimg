@@ -4,21 +4,56 @@ An integrated image processing library for BMP, JPEG, PNG, and WebP formats.
 
 This library was developed for the [Rusimg](https://github.com/yotiosoft/rusimg) project, but it is open for use in other projects as well.
 
+## Install
+
+Use ``cargo`` to add the library crate.
+
+```bash
+$ cargo add rusimg
+```
+
+Or, add this to your project's ``Cargo.toml``.
+
+```toml
+[dependencies]
+rusimg = "0.1.0"
+```
+
+If you don't use the specified image format, you can remove it from the features.  
+For example, if you don't use the webp format, leave ``webp`` out of the features so that the webp format is not included in the library.
+
+```toml
+[dependencies]
+rusimg = { version = "0.1.0", default-features = false, features = ["bmp", "jpeg", "png"] }
+```
+
 ## Features
 
+- Open Image (bmp, jpeg, png, webp)
 - Image Conversion (jpeg, png, webp, bmp)
-- Set Conversion Quality
+- Image compression (jpeg, png, webp)
 - Image Resizing
 - Image Cropping
 - Grayscale Conversion
 - Save the image
 
+### Open Image
+
+After opening the image, the function will return a ``RusImg`` object.
+
+```rust
+pub fn open_image(path: &Path) -> Result<RusImg, RusimgError>;
+```
+
 ### Image Conversion
 
 Rusimg can convert images to the following formats.  
 
-- For binary crates, the conversion format can be specified with the ``-c`` option.
-- For library crates, the conversion format can be specified by calling the ``rusimg::RusImg.convert()`` function.
+The conversion format can be specified by calling the ``rusimg::RusImg.convert()`` function.
+
+```rust
+pub fn convert(&mut self, new_extension: &Extension) -> Result<(), RusimgError>;
+```
 
 | format | backend library                             | library crate extension |
 | ------ | ------------------------------------------- | ----------------------- |
@@ -27,13 +62,15 @@ Rusimg can convert images to the following formats.
 | webp   | [webp](https://crates.io/crates/webp)       | Extension::Webp         |
 | bmp    | [image](https://crates.io/crates/image)     | Extension::Bmp          |
 
+### Image compression
 
-### Set Conversion Quality
+Rusimg can set the quality of the converted image. This depends on each image format.  
 
-Rusimg can set the quality of the converted image. This depends on each image format.
+The quality can be specified by calling the ``rusimg::RusImg.compress()`` function.
 
-- For binary crates, the quality can be specified with the ``-q`` option. 
-- For library crates, the quality can be specified by calling the ``rusimg::RusImg.compress()`` function.
+```rust
+pub fn compress(&mut self, quality: Option<f32>) -> Result<(), RusimgError>;
+```
 
 | format | quality                                                      | note                                                         |
 | ------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
@@ -48,11 +85,19 @@ Resize images. The resize ratio is specified by a scaling factor (0, 100].
 
 The resize ratio can be specified by calling the ``rusimg::RusImg.resize()`` function.
 
+```rust
+pub fn resize(&mut self, resize_ratio: u8) -> Result<ImgSize, RusimgError>;
+```
+
 ### Image Cropping
 
 Crop images.  
 
 The crop size can be specified by calling the ``rusimg::RusImg.trim()`` or ``rusimg::RusImg.trim_rect()`` function.
+
+```rust
+pub fn trim(&mut self, trim: Rect) -> Result<ImgSize, RusimgError>;
+```
 
 ### Grayscale Conversion
 
@@ -60,56 +105,13 @@ Convert images to grayscale.
 
 The grayscale conversion can be specified by calling the ``rusimg::RusImg.grayscale()`` function.
 
+```rust
+pub fn grayscale(&mut self);
+```
+
 ### Save the image
 
-Save the image to the specified file path.
-
-## Install
-
-Use ``cargo`` to add the library crate.
-
-```bash
-$ cargo add rusimg
-```
-
-Or, add this to your ``Cargo.toml``.
-
-```toml
-[dependencies]
-rusimg = "0.1.0"
-```
-
-If you don't use the specified image format, you can remove it from the features.  
-For example, if don't use the webp format, leave ``webp`` out of the features so that the webp format is not included in the library.
-
-```toml
-[dependencies]
-rusimg = { version = "0.1.0", default-features = false, features = ["bmp", "jpeg", "png"] }
-```
-
-## Typical functions
-
-### rusimg::open_image()
-
-Given a file path, open_image() returns struct RusImg, which contains the data for that image.
-Struct ``RusImg`` has public processing functions for that image in ``RusimgTrait``.
-
-```rust
-pub fn open_image(path: &Path) -> Result<RusImg, RusimgError>;
-```
-
-### rusimg::RusImg.convert()
-
-Converts the image to the specified format.  
-If conversion is successful, the image data is updated in the struct RusImg.
-
-```rust
-pub fn convert(&mut self, new_extension: &Extension) -> Result<(), RusimgError>;
-```
-
-### rusimg::RusImg.save_image()
-
-``save_image()`` saves the image to the specified file path.  
+Save the image to the specified file path.  
 If the destination file path is not specified, the image is saved to the same file path as the source file (excluding the file extension).
 
 ```rust
