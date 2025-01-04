@@ -69,25 +69,22 @@ Save the image to the specified file path.
 Use ``cargo`` to add the library crate.
 
 ```bash
-$ cargo add rusimg --no-default-features --features bmp,jpeg,png,webp
+$ cargo add rusimg
 ```
 
 Or, add this to your ``Cargo.toml``.
 
 ```toml
 [dependencies]
-rusimg = { version = "0.1.0", default-features = false, features = ["bmp", "jpeg", "png", "webp"] }
+rusimg = "0.1.0"
 ```
 
-Note that this crate includes the ``app`` feature by default, **which is only necessary for the binary crate but not for the library crate**.  
-This feature includes following dependencies: ``clap``, ``regex``, ``viuer``, ``glob``, ``colored``, ``tokio``, ``futures``.
-
 If you don't use the specified image format, you can remove it from the features.  
-For example, if don't use the bmp format, leave ``bmp`` out of the features.
+For example, if don't use the webp format, leave ``webp`` out of the features so that the webp format is not included in the library.
 
 ```toml
 [dependencies]
-rusimg = { version = "0.1.0", default-features = false, features = ["jpeg", "png", "webp"] }
+rusimg = { version = "0.1.0", default-features = false, features = ["bmp", "jpeg", "png"] }
 ```
 
 ## Typical functions
@@ -185,9 +182,15 @@ pub struct MyBmpImage {
 
 impl RusimgTrait for MyBmpImage {
     fn import(image: DynamicImage, source_path: PathBuf, source_metadata: Metadata) -> Result<Self, RusimgError> {
+        // create MyBmpImage object
         ...
     }
     fn open(path: PathBuf, image_buf: Vec<u8>, metadata: Metadata) -> Result<Self, RusimgError> {
+        // open the image and create MyBmpImage object
+        ...
+    }
+    fn save(&mut self, path: Option<PathBuf>) -> Result<(), RusimgError> {
+        // save the image
         ...
     }
     ...
@@ -195,6 +198,51 @@ impl RusimgTrait for MyBmpImage {
 ```
 
 ## Data types
+
+### Trait
+
+#### trait RusimgTrait
+
+``RusimgTrait`` is a trait that contains the image processing functions.
+
+```rust
+pub trait RusimgTrait {
+    /// Import an image from a DynamicImage object.
+    fn import(image: DynamicImage, source_path: PathBuf, source_metadata: Metadata) -> Result<Self, RusimgError> where Self: Sized;
+    /// Open an image from a image buffer.
+    /// The ``path`` parameter is the file path of the image, but it is used for copying the file path to the object.
+    /// This returns a RusImg object.
+    fn open(path: PathBuf, image_buf: Vec<u8>, metadata: Metadata) -> Result<Self, RusimgError> where Self: Sized;
+    /// Save the image to a file to the ``path``.
+    fn save(&mut self, path: Option<PathBuf>) -> Result<(), RusimgError>;
+    /// Compress the image with the quality parameter.
+    fn compress(&mut self, quality: Option<f32>) -> Result<(), RusimgError>;
+    /// Resize the image with the resize_ratio parameter.
+    fn resize(&mut self, resize_ratio: u8) -> Result<ImgSize, RusimgError>;
+    /// Trim the image with the trim parameter.
+    /// The trim parameter is a Rect object.
+    fn trim(&mut self, trim: Rect) -> Result<ImgSize, RusimgError>;
+    /// Grayscale the image.
+    fn grayscale(&mut self);
+    /// Set a image::DynamicImage to the image object.
+    /// After setting the image, the image object will be updated.
+    fn set_dynamic_image(&mut self, image: DynamicImage) -> Result<(), RusimgError>;
+    /// Get a image::DynamicImage from the image object.
+    fn get_dynamic_image(&mut self) -> Result<DynamicImage, RusimgError>;
+    /// Get the source file path.
+    fn get_source_filepath(&self) -> PathBuf;
+    /// Get the destination file path.
+    fn get_destination_filepath(&self) -> Option<PathBuf>;
+    /// Get the source metadata.
+    fn get_metadata_src(&self) -> Metadata;
+    /// Get the destination metadata.
+    fn get_metadata_dest(&self) -> Option<Metadata>;
+    /// Get the image size.
+    fn get_size(&self) -> ImgSize;
+    /// Get a file path for saving an image.
+    fn get_save_filepath(&self, source_filepath: &PathBuf, destination_filepath: Option<PathBuf>, new_extension: &String) -> Result<PathBuf, RusimgError>;
+}
+```
 
 ### Structs
 
