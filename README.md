@@ -1,6 +1,6 @@
 # librusimg
 
-An integrated image processing library for BMP, JPEG, PNG, and WebP formats.   
+An integrated image processing, conversion, and compression library for BMP, JPEG, PNG, and WebP formats for Rust.
 
 This library was developed for the [Rusimg](https://github.com/yotiosoft/rusimg) project, but it is open for use in other projects as well.
 
