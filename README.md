@@ -81,7 +81,7 @@ pub fn compress(&mut self, quality: Option<f32>) -> Result<(), RusimgError>;
 
 ### Image Resizing
 
-Resize images. The resize ratio is specified by a scaling factor (0, 100].  
+Resize images.  
 
 The resize ratio can be specified by calling the ``rusimg::RusImg.resize()`` function.
 
