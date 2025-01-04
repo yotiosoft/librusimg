@@ -6,5 +6,5 @@
 *.webp
 rust-project.json
 .vscode
-.code-workspace
+*.code-workspace
 
