@@ -94,39 +94,115 @@ pub struct Rect {
 /// Implement this trait for each image format.
 pub trait RusimgTrait {
     /// Import an image from a DynamicImage object.
+    /// 
+    /// args:
+    /// - image: DynamicImage object
+    /// - source_path: PathBuf object
+    /// - source_metadata: Metadata object
+    /// 
+    /// returns:
+    /// - Self object
     fn import(image: DynamicImage, source_path: PathBuf, source_metadata: Metadata) -> Result<Self, RusimgError> where Self: Sized;
     /// Open an image from a image buffer.
     /// The ``path`` parameter is the file path of the image, but it is used for copying the file path to the object.
     /// This returns a RusImg object.
+    /// 
+    /// args:
+    /// - path: file path of the image
+    /// - image_buf: image buffer
+    /// - metadata: Metadata object
+    /// 
+    /// returns:
+    /// - Self object
     fn open(path: PathBuf, image_buf: Vec<u8>, metadata: Metadata) -> Result<Self, RusimgError> where Self: Sized;
     /// Save the image to a file to the ``path``.
+    /// If the ``path`` is None, the image will be saved to the original file with the new extension.
+    /// 
+    /// args:
+    /// - path: file path for saving the image
+    /// 
+    /// returns:
+    /// - Result object
     fn save(&mut self, path: Option<PathBuf>) -> Result<(), RusimgError>;
     /// Compress the image with the quality parameter.
+    /// The quality parameter is a float value between 0.0 and 100.0.
+    /// 
+    /// args:
+    /// - quality: quality parameter
+    /// 
+    /// returns:
+    /// - Result object
     fn compress(&mut self, quality: Option<f32>) -> Result<(), RusimgError>;
     /// Resize the image with the resize_ratio parameter.
+    /// The resize_ratio parameter is a u8 value between 1 and 100.
+    /// 
+    /// args:
+    /// - resize_ratio: resize ratio parameter
+    /// 
+    /// returns:
+    /// - ImgSize object
     fn resize(&mut self, resize_ratio: u8) -> Result<ImgSize, RusimgError>;
     /// Trim the image with the trim parameter.
     /// The trim parameter is a Rect object.
+    /// 
+    /// args:
+    /// - trim: trim parameter (Rect object)
+    /// 
+    /// returns:
+    /// - ImgSize object
     fn trim(&mut self, trim: Rect) -> Result<ImgSize, RusimgError>;
     /// Grayscale the image.
     fn grayscale(&mut self);
     /// Set a image::DynamicImage to the image object.
     /// After setting the image, the image object will be updated.
+    /// 
+    /// args:
+    /// - image: DynamicImage object
+    /// 
+    /// returns:
+    /// - Result object
     fn set_dynamic_image(&mut self, image: DynamicImage) -> Result<(), RusimgError>;
     /// Get a image::DynamicImage from the image object.
+    /// 
+    /// returns:
+    /// - DynamicImage object
     fn get_dynamic_image(&mut self) -> Result<DynamicImage, RusimgError>;
     /// Get the source file path.
+    /// 
+    /// returns:
+    /// - PathBuf object
     fn get_source_filepath(&self) -> PathBuf;
     /// Get the destination file path.
+    /// 
+    /// returns:
+    /// - Option<PathBuf> object
     fn get_destination_filepath(&self) -> Option<PathBuf>;
     /// Get the source metadata.
+    /// 
+    /// returns:
+    /// - Metadata object
     fn get_metadata_src(&self) -> Metadata;
     /// Get the destination metadata.
+    /// 
+    /// returns:
+    /// - Option<Metadata> object
     fn get_metadata_dest(&self) -> Option<Metadata>;
     /// Get the image size.
+    /// 
+    /// returns:
+    /// - ImgSize object
     fn get_size(&self) -> ImgSize;
 
     /// Get a file path for saving an image.
+    /// If the destination_filepath is None, the image will be saved to the source file path with the new extension.
+    /// 
+    /// args:
+    /// - source_filepath: source file path
+    /// - destination_filepath: destination file path
+    /// - new_extension: new extension
+    /// 
+    /// returns:
+    /// - PathBuf object
     fn get_save_filepath(&self, source_filepath: &PathBuf, destination_filepath: Option<PathBuf>, new_extension: &String) -> Result<PathBuf, RusimgError> {
         if let Some(path) = destination_filepath {
             if Path::new(&path).is_dir() {
