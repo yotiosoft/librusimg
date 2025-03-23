@@ -5,7 +5,6 @@ authors = ["yotio <yotio@yotiosoft.com>"]
 description = "An integrated image processing library for BMP, JPEG, PNG, and WebP formats. This library was developed for the Rusimg project, but it is open for use in other projects as well."
 license = "MIT"
 edition = "2021"
-autobins = true
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
