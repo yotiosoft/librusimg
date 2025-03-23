@@ -3,7 +3,7 @@ use image::DynamicImage;
 use std::fs::Metadata;
 use std::path::PathBuf;
 
-use super::{ImgSize, RusimgError, RusimgTrait, Rect};
+use super::super::{ImgSize, RusimgError, BackendTrait, Rect};
 
 #[derive(Debug, Clone)]
 pub struct BmpImage {
@@ -15,7 +15,7 @@ pub struct BmpImage {
     pub filepath_output: Option<PathBuf>,
 }
 
-impl RusimgTrait for BmpImage {
+impl BackendTrait for BmpImage {
     /// Import an image from a DynamicImage object.
     fn import(image: DynamicImage, source_path: PathBuf, source_metadata: Metadata) -> Result<Self, RusimgError> {
         let size = ImgSize { width: image.width() as usize, height: image.height() as usize };

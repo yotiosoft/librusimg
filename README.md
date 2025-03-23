@@ -120,13 +120,13 @@ pub fn save_image(&mut self, path: Option<&str>) -> Result<SaveStatus, RusimgErr
 
 ## Add new image type & backend yourself
 
-With implementing the ``RusimgTrait`` trait, you can add a new image format backend to librusimg that is not currently supported.  
+With implementing the ``BackendTrait`` trait, you can add a new image format backend to librusimg that is not currently supported.  
 ``Extension::ExternalFormat(String)`` is provided for the library crate users to use if they wish to implement their own alternate image file format.
 
 Example: Implementing ``my_bmp`` that implements ``bmp`` format myself.
 ```rust
 mod my_bmp;
-use librusimg::RusimgTrait;
+use librusimg::BackendTrait;
 use librusimg::RusImg;
 use librusimg::Extension;
 use librusimg::RusimgError;
@@ -162,7 +162,7 @@ fn main() {
 }
 ```
 
-In my_bmp.rs, implement the ``RusimgTrait`` trait for the bmp format.
+In my_bmp.rs, implement the ``BackendTrait`` trait for the bmp format.
 
 ```rust
 use image::DynamicImage;
@@ -170,7 +170,7 @@ use image::DynamicImage;
 use std::fs::Metadata;
 use std::path::PathBuf;
 
-use rusimg::{ImgSize, RusimgError, RusimgTrait};
+use rusimg::{ImgSize, RusimgError, BackendTrait};
 
 #[derive(Debug, Clone)]
 pub struct MyBmpImage {
@@ -182,7 +182,7 @@ pub struct MyBmpImage {
     pub filepath_output: Option<PathBuf>,
 }
 
-impl RusimgTrait for MyBmpImage {
+impl BackendTrait for MyBmpImage {
     fn import(image: DynamicImage, source_path: PathBuf, source_metadata: Metadata) -> Result<Self, RusimgError> {
         // create MyBmpImage object
         ...
@@ -203,12 +203,12 @@ impl RusimgTrait for MyBmpImage {
 
 ### Trait
 
-#### trait RusimgTrait
+#### trait BackendTrait
 
-``RusimgTrait`` is a trait that contains the image processing functions.
+``BackendTrait`` is a trait that contains the image processing functions.
 
 ```rust
-pub trait RusimgTrait {
+pub trait BackendTrait {
     /// Import an image from a DynamicImage object.
     fn import(image: DynamicImage, source_path: PathBuf, source_metadata: Metadata) -> Result<Self, RusimgError> where Self: Sized;
     /// Open an image from a image buffer.
@@ -250,13 +250,13 @@ pub trait RusimgTrait {
 
 #### struct RusImg
 
-struct ``RusImg`` holds the file extension and the image data (``RusimgTrait``).  
-``RusimgTrait`` is a trait that contains the image processing functions, but struct ``RusImg`` implements these wrapper functions.
+struct ``RusImg`` holds the file extension and the image data (``BackendTrait``).  
+``BackendTrait`` is a trait that contains the image processing functions, but struct ``RusImg`` implements these wrapper functions.
 
 ```rust
 pub struct RusImg {
     pub extension: Extension,
-    pub data: Box<(dyn RusimgTrait)>,
+    pub data: Box<(dyn BackendTrait)>,
 }
 ```
 

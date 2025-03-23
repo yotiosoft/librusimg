@@ -1,40 +1,37 @@
-use std::io::{Write, Cursor};
-use std::fs::Metadata;
-use std::path::PathBuf;
-use image::DynamicImage;
+use image::{DynamicImage, EncodableLayout};
 
-use super::{RusimgTrait, RusimgError, ImgSize, Rect};
+use std::fs::Metadata;
+use std::io::Write;
+use std::path::{PathBuf, Path};
+
+use super::super::{BackendTrait, RusimgError, ImgSize, Rect};
 
 #[derive(Debug, Clone)]
-pub struct PngImage {
-    binary_data: Vec<u8>,
+pub struct WebpImage {
     pub image: DynamicImage,
     image_bytes: Option<Vec<u8>>,
     width: usize,
     height: usize,
     operations_count: u32,
+    required_quality: Option<f32>,
     pub metadata_input: Metadata,
     pub metadata_output: Option<Metadata>,
     pub filepath_input: PathBuf,
     pub filepath_output: Option<PathBuf>,
 }
 
-impl RusimgTrait for PngImage {
+impl BackendTrait for WebpImage {
     /// Import an image from a DynamicImage object.
     fn import(image: DynamicImage, source_path: PathBuf, source_metadata: Metadata) -> Result<Self, RusimgError> {
         let (width, height) = (image.width() as usize, image.height() as usize);
 
-        let mut new_binary_data = Vec::new();
-        image.write_to(&mut Cursor::new(&mut new_binary_data), image::ImageFormat::Png)
-            .map_err(|e| RusimgError::FailedToCopyBinaryData(e.to_string()))?;
-
         Ok(Self {
-            binary_data: new_binary_data,
             image,
             image_bytes: None,
             width,
             height,
             operations_count: 0,
+            required_quality: None,
             metadata_input: source_metadata,
             metadata_output: None,
             filepath_input: source_path,
@@ -44,39 +41,60 @@ impl RusimgTrait for PngImage {
 
     /// Open an image from a image buffer.
     fn open(path: PathBuf, image_buf: Vec<u8>, metadata: Metadata) -> Result<Self, RusimgError> {
-        let image = image::load_from_memory(&image_buf).map_err(|e| RusimgError::FailedToOpenImage(e.to_string()))?;
-        let (width, height) = (image.width() as usize, image.height() as usize);
+        let webp_decoder = dep_webp::Decoder::new(&image_buf).decode();
+        if let Some(webp_decoder) = webp_decoder {
+            let image = webp_decoder.to_image();
+            let (width, height) = (image.width() as usize, image.height() as usize);
 
-        Ok(Self {
-            binary_data: image_buf,
-            image,
-            image_bytes: None,
-            width,
-            height,
-            operations_count: 0,
-            metadata_input: metadata,
-            metadata_output: None,
-            filepath_input: path,
-            filepath_output: None,
-        })
+            Ok(Self {
+                image,
+                image_bytes: Some(image_buf),
+                width,
+                height,
+                operations_count: 0,
+                required_quality: None,
+                metadata_input: metadata,
+                metadata_output: None,
+                filepath_input: path,
+                filepath_output: None,
+            })
+        }
+        else {
+            return Err(RusimgError::FailedToDecodeWebp);
+        }
     }
 
     /// Save the image to a file.
     fn save(&mut self, path: Option<PathBuf>) -> Result<(), RusimgError> {
-        let save_path = Self::get_save_filepath(&self, &self.filepath_input, path, &"png".to_string())?;
-        
-        // image_bytes == None の場合、DynamicImage を 保存
-        if self.image_bytes.is_none() {
-            self.image.to_rgba8().save(&save_path).map_err(|e| RusimgError::FailedToSaveImage(e.to_string()))?;
-            self.metadata_output = Some(std::fs::metadata(&save_path).map_err(|e| RusimgError::FailedToGetMetadata(e.to_string()))?);
-        }
-        // image_bytes != None の場合、oxipng で圧縮したバイナリデータを保存
-        else {
+        let save_path = Self::get_save_filepath(&self, &self.filepath_input, path, &"webp".to_string())?;
+
+        // 元が webp かつ操作回数が 0 なら encode しない
+        let source_is_webp = Path::new(&self.filepath_input).extension().and_then(|s| s.to_str()).unwrap_or("").to_string() == "webp";
+        if source_is_webp && self.operations_count == 0 && self.image_bytes.is_some() {
             let mut file = std::fs::File::create(&save_path).map_err(|e| RusimgError::FailedToCreateFile(e.to_string()))?;
-            file.write_all(&self.image_bytes.as_ref().unwrap()).map_err(|e| RusimgError::FailedToWriteFIle(e.to_string()))?;
+            file.write_all(self.image_bytes.as_ref().unwrap()).map_err(|e| RusimgError::FailedToWriteFIle(e.to_string()))?;
+
             self.metadata_output = Some(file.metadata().map_err(|e| RusimgError::FailedToGetMetadata(e.to_string()))?);
+            self.filepath_output = Some(save_path);
+
+            return Ok(());
         }
 
+        // quality
+        let quality = if let Some(q) = self.required_quality {
+            q       // 指定されていればその値
+        }
+        else {
+            75.0    // 既定: 100.0（最高品質, compress を必要としない場合）
+        };
+       
+        // DynamicImage を （圧縮＆）保存
+        let encoded_webp = dep_webp::Encoder::from_rgba(&self.image.to_rgba8(), self.image.width(), self.image.height()).encode(quality);
+
+        let mut file = std::fs::File::create(&save_path).map_err(|e| RusimgError::FailedToCreateFile(e.to_string()))?;
+        file.write_all(&encoded_webp.as_bytes()).map_err(|e| RusimgError::FailedToWriteFIle(e.to_string()))?;
+
+        self.metadata_output = Some(file.metadata().map_err(|e| RusimgError::FailedToGetMetadata(e.to_string()))?);
         self.filepath_output = Some(save_path);
 
         Ok(())
@@ -84,54 +102,13 @@ impl RusimgTrait for PngImage {
 
     /// Compress the image.
     /// quality: Option<f32> 0.0 - 100.0
-    /// Because oxipng supports only 6 levels of compression, the quality value is converted to a level value.
+    /// Because the webp crate compresses the image when saving it, the compress() method does not need to do anything.
+    /// So this method only sets the quality value.
     fn compress(&mut self, quality: Option<f32>) -> Result<(), RusimgError> {
-        // quality の値に応じて level を設定
-        let level = if let Some(q) = quality {
-            if q <= 17.0 {
-                1
-            }
-            else if q > 17.0 && q <= 34.0 {
-                2
-            }
-            else if q > 34.0 && q <= 51.0 {
-                3
-            }
-            else if q > 51.0 && q <= 68.0 {
-                4
-            }
-            else if q > 68.0 && q <= 85.0 {
-                5
-            }
-            else {
-                6
-            }
-        }
-        else {
-            5       // default
-        };
-
-        match oxipng::optimize_from_memory(&self.binary_data, &oxipng::Options::from_preset(level)) {
-            Ok(data) => {
-                self.image_bytes = Some(data);
-                self.operations_count += 1;
-                Ok(())
-            },
-            Err(e) => {
-                let oxipng_err = match e {
-                    oxipng::PngError::DeflatedDataTooLong(s) => Err(format!("(oxipng) deflated data too long: {}", s)),
-                    oxipng::PngError::TimedOut => Err("(oxipng) timed out".to_string()),
-                    oxipng::PngError::NotPNG => Err("(oxipng) not png".to_string()),
-                    oxipng::PngError::APNGNotSupported => Err("(oxipng) apng not supported".to_string()),
-                    oxipng::PngError::InvalidData => Err("(oxipng) invalid data".to_string()),
-                    oxipng::PngError::TruncatedData => Err("(oxipng) truncated data".to_string()),
-                    oxipng::PngError::ChunkMissing(s) => Err(format!("(oxipng) chunk missing: {}", s)),
-                    oxipng::PngError::Other(s) => Err(format!("(oxipng) other: {}", s)),
-                    _ => Err("unknown error".to_string()),
-                };
-                Err(RusimgError::FailedToCompressImage(oxipng_err.unwrap()))
-            }
-        }
+        // compress later when saving
+        self.required_quality = quality;
+        self.operations_count += 1;
+        Ok(())
     }
 
     /// Resize the image.
@@ -158,7 +135,6 @@ impl RusimgTrait for PngImage {
             if self.width > trim.x as usize && self.height > trim.y as usize {
                 w = if self.width < (trim.x + trim.w) as usize { self.width as u32 - trim.x } else { trim.w };
                 h = if self.height < (trim.y + trim.h) as usize { self.height as u32 - trim.y } else { trim.h };
-                //println!("Required width or height is larger than image size. Corrected size: {}x{} -> {}x{}", trim_wh.0, trim_wh.1, w, h);
             }
             else {
                 return Err(RusimgError::InvalidTrimXY);
