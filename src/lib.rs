@@ -334,7 +334,7 @@ fn open_webp_image(_path: &Path, _buf: Vec<u8>, _metadata_input: Metadata) -> Re
 }
 
 /// Open an image file and return a RusImg object.
-pub fn open_image(path: &Path) -> Result<RusImg, RusimgError> {
+fn open_image(path: &Path) -> Result<RusImg, RusimgError> {
     let mut raw_data = std::fs::File::open(&path.to_path_buf()).map_err(|e| RusimgError::FailedToOpenFile(e.to_string()))?;
     let mut buf = Vec::new();
     raw_data.read_to_end(&mut buf).map_err(|e| RusimgError::FailedToReadFile(e.to_string()))?;
@@ -410,6 +410,13 @@ fn convert_to_webp_image(_dynamic_image: DynamicImage, _filepath: PathBuf, _meta
 /// RusImg object implementation.
 /// The RusImg object wraps RusimgTrait functions.
 impl RusImg {
+    /// Open an image file.
+    /// This function will open an image file and return a RusImg object.
+    /// The image file will be opened based on the file extension.
+    pub fn open(path: &Path) -> Result<Self, RusimgError> {
+        open_image(path)
+    }
+
     /// Get image size.
     /// This uses the ``get_size()`` function from ``RusimgTrait``.
     pub fn get_image_size(&self) -> Result<ImgSize, RusimgError> {
