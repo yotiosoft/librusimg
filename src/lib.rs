@@ -203,7 +203,12 @@ impl RusImg {
     pub fn convert(&mut self, new_extension: &Extension) -> Result<(), RusimgError> {
         let dynamic_image = self.data.get_dynamic_image()?;
         let filepath = self.data.get_source_filepath()?;
-        let metadata = self.data.get_metadata_src()?;
+        let metadata = self.data.get_metadata_src();
+        let metadata = if metadata.is_ok() {
+            Some(metadata.unwrap())
+        } else {
+            None
+        };
 
         let new_image: Box<(dyn BackendTrait)> = match new_extension {
             Extension::Empty => return Err(RusimgError::UnsupportedFileExtension),
