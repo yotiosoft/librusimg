@@ -293,6 +293,8 @@ mod tests {
         }
         let mut test_image = RusImg::open(Path::new(filename)).unwrap();
         test_image.data.set_dynamic_image(DynamicImage::ImageRgb8(img)).unwrap();
+        let new_extension = Extension::Png;
+        test_image.convert(&new_extension).unwrap();
         test_image.save_image(Some(filename)).unwrap();
     }
 
