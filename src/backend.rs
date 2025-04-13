@@ -230,6 +230,28 @@ pub fn open_image(path: &Path) -> Result<RusImg, RusimgError> {
     }
 }
 
+/// Open but not read because the file is not exist.
+pub fn new_image() -> Result<RusImg, RusimgError> {
+    let path = PathBuf::new();
+    let buf = Vec::new();
+    let metadata_input = Metadata::new();
+    match guess_image_format(&buf)? {
+        image::ImageFormat::Bmp => {
+            open_bmp_image(&path, buf, metadata_input)
+        },
+        image::ImageFormat::Jpeg => {
+            open_jpeg_image(&path, buf, metadata_input)
+        },
+        image::ImageFormat::Png => {
+            open_png_image(&path, buf, metadata_input)
+        },
+        image::ImageFormat::WebP => {
+            open_webp_image(&path, buf, metadata_input)
+        },
+        _ => Err(RusimgError::UnsupportedFileExtension),
+    }
+}
+
 // Converter interfaces.
 /// Convert a DynamicImage object to a BMP image object.
 /// If the bmp feature is enabled, it will convert the DynamicImage to a BMP image.

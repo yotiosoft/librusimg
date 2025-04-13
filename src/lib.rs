@@ -110,12 +110,10 @@ pub struct SaveStatus {
 
 /// Image extension object.
 /// By default, Rusimg supports BMP, JPEG, PNG, and WebP.
-/// If you want to use another format, you can use ExternalFormat like this:
-/// ```
-/// let ext = Extension::ExternalFormat("tiff".to_string());
-/// ```
+/// If you want to use another format, you can use ExternalFormat like ``Extension::ExternalFormat("tiff".to_string())``.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Extension {
+    Empty,
     Bmp,
     Jpeg,
     Png,
@@ -267,5 +265,203 @@ impl RusImg {
             after_filesize: self.data.get_metadata_dest().as_ref().or(None).map(|m| m.len())
         };
         Ok(ret)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::path::Path;
+    use image::{ImageBuffer, Rgb};
+
+    // 画像を生成する関数
+    fn generate_test_image(filename: &str, width: u32, height: u32) {
+        let mut img: ImageBuffer<Rgb<u8>, Vec<u8>> = ImageBuffer::new(width, height);
+        for x in 0..width {
+            for y in 0..height {
+                let r = (x * 3) as u8;
+                let g = (y * 5) as u8;
+                let b = (x * y) as u8;
+                img.put_pixel(x, y, Rgb([r, g, b]));
+            }
+        }
+        let mut test_image = RusImg::open(Path::new(filename)).unwrap();
+        test_image.data.set_dynamic_image(DynamicImage::ImageRgb8(img)).unwrap();
+        test_image.save_image(Some(filename)).unwrap();
+    }
+
+    #[test]
+    fn test_open_image() {
+        let filename = "test_image.png";
+        let width = 100;
+        let height = 100;
+        generate_test_image(filename, width, height);
+        let path = Path::new(filename);
+        let result = RusImg::open(path);
+        assert!(result.is_ok());
+        std::fs::remove_file(filename).unwrap();
+    }
+
+    #[test]
+    fn test_get_image_size() {
+        let filename = "test_image.png";
+        let width = 100;
+        let height = 100;
+        generate_test_image(filename, width, height);
+        let path = Path::new(filename);
+        let img = RusImg::open(path).unwrap();
+        let size = img.get_image_size().unwrap();
+        assert_eq!(size.width, 100);
+        assert_eq!(size.height, 100);
+        std::fs::remove_file(filename).unwrap();
+    }
+
+    #[test]
+    fn test_resize_image() {
+        let filename = "test_image.png";
+        let width = 100;
+        let height = 100;
+        generate_test_image(filename, width, height);
+        let path = Path::new(filename);
+        let mut img = RusImg::open(path).unwrap();
+        let size = img.resize(50).unwrap();
+        assert_eq!(size.width, 50);
+        assert_eq!(size.height, 50);
+        std::fs::remove_file(filename).unwrap();
+    }
+
+    #[test]
+    fn test_trim_image() {
+        let filename = "test_image.png";
+        let width = 100;
+        let height = 100;
+        generate_test_image(filename, width, height);
+        let path = Path::new(filename);
+        let mut img = RusImg::open(path).unwrap();
+        let size = img.trim(10, 10, 50, 50).unwrap();
+        assert_eq!(size.width, 50);
+        assert_eq!(size.height, 50);
+        std::fs::remove_file(filename).unwrap();
+    }
+
+    #[test]
+    fn test_trim_rect_image() {
+        let filename = "test_image.png";
+        let width = 100;
+        let height = 100;
+        generate_test_image(filename, width, height);
+        let path = Path::new(filename);
+        let mut img = RusImg::open(path).unwrap();
+        let rect = Rect { x: 10, y: 10, w: 50, h: 50 };
+        let size = img.trim_rect(rect).unwrap();
+        assert_eq!(size.width, 50);
+        assert_eq!(size.height, 50);
+        std::fs::remove_file(filename).unwrap();
+    }
+
+    #[test]
+    fn test_grayscale_image() {
+        let filename = "test_image.png";
+        let width = 100;
+        let height = 100;
+        generate_test_image(filename, width, height);
+        let path = Path::new(filename);
+        let mut img = RusImg::open(path).unwrap();
+        let result = img.grayscale();
+        assert!(result.is_ok());
+        std::fs::remove_file(filename).unwrap();
+    }
+
+    #[test]
+    fn test_compress_image() {
+        let filename = "test_image.png";
+        let width = 100;
+        let height = 100;
+        generate_test_image(filename, width, height);
+        let path = Path::new(filename);
+        let mut img = RusImg::open(path).unwrap();
+        let result = img.compress(Some(80.0));
+        assert!(result.is_ok());
+        std::fs::remove_file(filename).unwrap();
+    }
+
+    #[test]
+    fn test_convert_image() {
+        let filename = "test_image.png";
+        let width = 100;
+        let height = 100;
+        generate_test_image(filename, width, height);
+        let path = Path::new(filename);
+        let mut img = RusImg::open(path).unwrap();
+        let result = img.convert(&Extension::Jpeg);
+        assert!(result.is_ok());
+        std::fs::remove_file(filename).unwrap();
+    }
+
+    #[test]
+    fn test_set_dynamic_image() {
+        let filename = "test_image.png";
+        let width = 100;
+        let height = 100;
+        generate_test_image(filename, width, height);
+        let path = Path::new(filename);
+        let mut img = RusImg::open(path).unwrap();
+        let dynamic_image = image::open(path).unwrap();
+        let result = img.set_dynamic_image(dynamic_image);
+        assert!(result.is_ok());
+        std::fs::remove_file(filename).unwrap();
+    }
+
+    #[test]
+    fn test_get_dynamic_image() {
+        let filename = "test_image.png";
+        let width = 100;
+        let height = 100;
+        generate_test_image(filename, width, height);
+        let path = Path::new(filename);
+        let mut img = RusImg::open(path).unwrap();
+        let result = img.get_dynamic_image();
+        assert!(result.is_ok());
+        std::fs::remove_file(filename).unwrap();
+    }
+
+    #[test]
+    fn test_get_extension() {
+        let filename = "test_image.png";
+        let width = 100;
+        let height = 100;
+        generate_test_image(filename, width, height);
+        let path = Path::new(filename);
+        let img = RusImg::open(path).unwrap();
+        let extension = img.get_extension();
+        assert_eq!(extension, Extension::Png);
+        std::fs::remove_file(filename).unwrap();
+    }
+
+    #[test]
+    fn test_get_input_filepath() {
+        let filename = "test_image.png";
+        let width = 100;
+        let height = 100;
+        generate_test_image(filename, width, height);
+        let path = Path::new(filename);
+        let img = RusImg::open(path).unwrap();
+        let input_filepath = img.get_input_filepath();
+        assert_eq!(input_filepath, Path::new(filename));
+        std::fs::remove_file(filename).unwrap();
+    }
+
+    #[test]
+    fn test_save_image() {
+        let filename = "test_image.png";
+        let width = 100;
+        let height = 100;
+        generate_test_image(filename, width, height);
+        let path = Path::new(filename);
+        let mut img = RusImg::open(path).unwrap();
+        let result = img.save_image(Some("test_image_saved.png"));
+        assert!(result.is_ok());
+        std::fs::remove_file(filename).unwrap();
+        std::fs::remove_file("test_image_saved.png").unwrap();
     }
 }
