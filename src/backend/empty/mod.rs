@@ -6,53 +6,40 @@ use std::path::PathBuf;
 use super::super::{ImgSize, RusimgError, BackendTrait, Rect};
 
 #[derive(Debug, Clone)]
-pub struct BmpImage {
-    pub image: DynamicImage,
-    size: ImgSize,
-    pub metadata_input: Metadata,
-    pub metadata_output: Option<Metadata>,
-    pub filepath_input: PathBuf,
-    pub filepath_output: Option<PathBuf>,
+pub struct EmptyImage {
+    pub image: Option<DynamicImage>,
+    size: Option<ImgSize>,
 }
 
-impl BackendTrait for BmpImage {
+impl BackendTrait for EmptyImage {
     /// Import an image from a DynamicImage object.
-    fn import(image: DynamicImage, source_path: PathBuf, source_metadata: Metadata) -> Result<Self, RusimgError> {
-        let size = ImgSize { width: image.width() as usize, height: image.height() as usize };
-
-        Ok(Self {
-            image,
-            size,
-            metadata_input: source_metadata,
-            metadata_output: None,
-            filepath_input: source_path,
-            filepath_output: None,
-        })
+    fn import(image: Option<DynamicImage>, _source_path: Option<PathBuf>, _source_metadata: Option<Metadata>) -> Result<Self, RusimgError> {
+        if image.is_some() {
+            let image = image.unwrap();
+            let size = ImgSize { width: image.width() as usize, height: image.height() as usize };
+            Ok(Self {
+                image: Some(image),
+                size: Some(size),
+            })
+        } else {
+            Ok(Self {
+                image: None,
+                size: None,
+            })
+        }
     }
 
     /// Open an image from a image buffer.
-    fn open(path: PathBuf, image_buf: Vec<u8>, metadata: Metadata) -> Result<Self, RusimgError> {
-        let image = image::load_from_memory(&image_buf).map_err(|e| RusimgError::FailedToOpenImage(e.to_string()))?;
-        let size = ImgSize { width: image.width() as usize, height: image.height() as usize };
-
-        Ok(Self {
-            image,
-            size,
-            metadata_input: metadata,
-            metadata_output: None,
-            filepath_input: path,
-            filepath_output: None,
-        })
+    fn open(_path: Option<PathBuf>, _image_buf: Option<Vec<u8>>, _metadata: Option<Metadata>) -> Result<Self, RusimgError> {
+        // Because this is an empty image, we don't need to open anything.
+        Err(RusimgError::UnsupportedFeature)
     }
 
     /// Save the image to a file.
-    fn save(&mut self, path: Option<PathBuf>) -> Result<(), RusimgError> {
-        let save_path = Self::get_save_filepath(&self, &self.filepath_input, path, &"bmp".to_string())?;
-        self.image.to_rgb8().save(&save_path).map_err(|e| RusimgError::FailedToSaveImage(e.to_string()))?;
-        self.metadata_output = Some(std::fs::metadata(&save_path).map_err(|e| RusimgError::FailedToGetMetadata(e.to_string()))?);
-        self.filepath_output = Some(save_path);
-
-        Ok(())
+    fn save(&mut self, _path: Option<PathBuf>) -> Result<(), RusimgError> {
+        // Because this is an empty image, we don't need to save anything.
+        // You must convert the image to another format before saving.
+        Err(RusimgError::UnsupportedFeature)
     }
 
     /// Compressing a BMP image is not supported because BMP is a lossless format.
@@ -63,26 +50,40 @@ impl BackendTrait for BmpImage {
     /// Resize the image.
     /// Set the resize_ratio between 1 and 100.
     fn resize(&mut self, resize_ratio: u8) -> Result<ImgSize, RusimgError> {
-        let nwidth = (self.size.width as f32 * (resize_ratio as f32 / 100.0)) as usize;
-        let nheight = (self.size.height as f32 * (resize_ratio as f32 / 100.0)) as usize;
+        if self.image.is_none() {
+            return Err(RusimgError::ImageNotSpecified);
+        }
+        if self.size.is_none() {
+            return Err(RusimgError::ImageNotSpecified);
+        }
+
+        let nwidth = (self.size.unwrap().width as f32 * (resize_ratio as f32 / 100.0)) as usize;
+        let nheight = (self.size.unwrap().height as f32 * (resize_ratio as f32 / 100.0)) as usize;
         
-        self.image = self.image.resize(nwidth as u32, nheight as u32, image::imageops::FilterType::Lanczos3);
+        self.image = Some(self.image.clone().unwrap().resize(nwidth as u32, nheight as u32, image::imageops::FilterType::Lanczos3));
 
-        self.size.width = nwidth;
-        self.size.height = nheight;
+        self.size.unwrap().width = nwidth;
+        self.size.unwrap().height = nheight;
 
-        Ok(self.size)
+        Ok(self.size.unwrap())
     }
 
     /// Trim the image.
     /// Set the trim area with the rusimg::Rect structure.
     fn trim(&mut self, trim: Rect) -> Result<ImgSize, RusimgError> {
+        if self.image.is_none() {
+            return Err(RusimgError::ImageNotSpecified);
+        }
+        if self.size.is_none() {
+            return Err(RusimgError::ImageNotSpecified);
+        }
+
         let mut w = trim.w;
         let mut h = trim.h;
-        if self.size.width < (trim.x + trim.w) as usize || self.size.height < (trim.y + trim.h) as usize {
-            if self.size.width > trim.x as usize && self.size.height > trim.y as usize {
-                w = if self.size.width < (trim.x + trim.w) as usize { self.size.width as u32 - trim.x } else { trim.w };
-                h = if self.size.height < (trim.y + trim.h) as usize { self.size.height as u32 - trim.y } else { trim.h };
+        if self.size.unwrap().width < (trim.x + trim.w) as usize || self.size.unwrap().height < (trim.y + trim.h) as usize {
+            if self.size.unwrap().width > trim.x as usize && self.size.unwrap().height > trim.y as usize {
+                w = if self.size.unwrap().width < (trim.x + trim.w) as usize { self.size.unwrap().width as u32 - trim.x } else { trim.w };
+                h = if self.size.unwrap().height < (trim.y + trim.h) as usize { self.size.unwrap().height as u32 - trim.y } else { trim.h };
                 //println!("Required width or height is larger than image size. Corrected size: {}x{} -> {}x{}", trim_wh.0, trim_wh.1, w, h);
             }
             else {
@@ -90,52 +91,54 @@ impl BackendTrait for BmpImage {
             }
         }
 
-        self.image = self.image.crop(trim.x, trim.y, w, h);
+        self.image = Some(self.image.clone().unwrap().crop(trim.x, trim.y, w, h));
 
-        self.size.width = w as usize;
-        self.size.height = h as usize;
+        self.size = Some(ImgSize { width: w as usize, height: h as usize });
 
-        Ok(self.size)
+        Ok(self.size.unwrap())
     }
 
     /// Convert the image to grayscale.
     fn grayscale(&mut self) {
-        self.image = self.image.grayscale();
+        self.image = Some(self.image.clone().unwrap().grayscale());
     }
 
     /// Set the image to a DynamicImage object.
     fn set_dynamic_image(&mut self, image: DynamicImage) -> Result<(), RusimgError> {
-        self.image = image;
+        self.image = Some(image);
         Ok(())
     }
     
     /// Get the DynamicImage object.
     fn get_dynamic_image(&mut self) -> Result<DynamicImage, RusimgError> {
-        Ok(self.image.clone())
+        Ok(self.image.clone().unwrap())
     }
 
     /// Get the source file path.
-    fn get_source_filepath(&self) -> PathBuf {
-        self.filepath_input.clone()
+    fn get_source_filepath(&self) -> Result<PathBuf, RusimgError> {
+        Err(RusimgError::UnsupportedFeature)
     }
 
     /// Get the destination file path.
-    fn get_destination_filepath(&self) -> Option<PathBuf> {
-        self.filepath_output.clone()
+    fn get_destination_filepath(&self) -> Result<Option<PathBuf>, RusimgError> {
+        Err(RusimgError::UnsupportedFeature)
     }
 
     /// Get the source metadata.
-    fn get_metadata_src(&self) -> Metadata {
-        self.metadata_input.clone()
+    fn get_metadata_src(&self) -> Result<Metadata, RusimgError> {
+        Err(RusimgError::UnsupportedFeature)
     }
 
     /// Get the destination metadata.
-    fn get_metadata_dest(&self) -> Option<Metadata> {
-        self.metadata_output.clone()
+    fn get_metadata_dest(&self) -> Result<Option<Metadata>, RusimgError> {
+        Err(RusimgError::UnsupportedFeature)
     }
 
     /// Get the image size.
-    fn get_size(&self) -> ImgSize {
-        self.size
+    fn get_size(&self) -> Result<ImgSize, RusimgError> {
+        if self.size.is_none() {
+            return Err(RusimgError::ImageNotSpecified);
+        }
+        Ok(self.size.unwrap())
     }
 }

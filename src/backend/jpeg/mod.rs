@@ -22,7 +22,10 @@ pub struct JpegImage {
 
 impl BackendTrait for JpegImage {
     /// Import an image from a DynamicImage object.
-    fn import(image: DynamicImage, source_path: PathBuf, source_metadata: Metadata) -> Result<Self, RusimgError> {
+    fn import(image: Option<DynamicImage>, source_path: Option<PathBuf>, source_metadata: Option<Metadata>) -> Result<Self, RusimgError> {
+        let image = image.ok_or(RusimgError::ImageNotSpecified)?;
+        let source_path = source_path.ok_or(RusimgError::ImageNotSpecified)?;
+        let source_metadata = source_metadata.ok_or(RusimgError::ImageNotSpecified)?;
         let size = ImgSize { width: image.width() as usize, height: image.height() as usize };
 
         Ok(Self {
@@ -39,7 +42,11 @@ impl BackendTrait for JpegImage {
     }
 
     /// Open an image from a image buffer.
-    fn open(path: PathBuf, image_buf: Vec<u8>, metadata: Metadata) -> Result<Self, RusimgError> {
+    fn open(path: Option<PathBuf>, image_buf: Option<Vec<u8>>, metadata: Option<Metadata>) -> Result<Self, RusimgError> {
+        let path = path.ok_or(RusimgError::ImageNotSpecified)?; // 画像のパスが指定されていない場合はエラー
+        let image_buf = image_buf.ok_or(RusimgError::ImageNotSpecified)?; // 画像のバイナリデータが指定されていない場合はエラー
+        let metadata = metadata.ok_or(RusimgError::ImageNotSpecified)?; // 画像のメタデータが指定されていない場合はエラー
+        
         let image = image::load_from_memory(&image_buf).map_err(|e| RusimgError::FailedToOpenImage(e.to_string()))?;
         let size = ImgSize { width: image.width() as usize, height: image.height() as usize };
 
@@ -156,27 +163,27 @@ impl BackendTrait for JpegImage {
     }
 
     /// Get the source file path.
-    fn get_source_filepath(&self) -> PathBuf {
-        self.filepath_input.clone()
+    fn get_source_filepath(&self) -> Result<PathBuf, RusimgError> {
+        Ok(self.filepath_input.clone())
     }
 
     /// Get the destination file path.
-    fn get_destination_filepath(&self) -> Option<PathBuf> {
-        self.filepath_output.clone()
+    fn get_destination_filepath(&self) -> Result<Option<PathBuf>, RusimgError> {
+        Ok(self.filepath_output.clone())
     }
 
     /// Get the source metadata.
-    fn get_metadata_src(&self) -> Metadata {
-        self.metadata_input.clone()
+    fn get_metadata_src(&self) -> Result<Metadata, RusimgError> {
+        Ok(self.metadata_input.clone())
     }
 
     /// Get the destination metadata.
-    fn get_metadata_dest(&self) -> Option<Metadata> {
-        self.metadata_output.clone()
+    fn get_metadata_dest(&self) -> Result<Option<Metadata>, RusimgError> {
+        Ok(self.metadata_output.clone())
     }
 
     /// Get the image size.
-    fn get_size(&self) -> ImgSize {
-        self.size
+    fn get_size(&self) -> Result<ImgSize, RusimgError> {
+        Ok(self.size)
     }
 }

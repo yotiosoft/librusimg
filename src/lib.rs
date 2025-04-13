@@ -33,9 +33,11 @@ pub enum RusimgError {
     InvalidTrimXY,
     ImageFormatCannotBeCompressed,
     UnsupportedFileExtension,
+    UnsupportedFeature,
     ImageDataIsNone,
     FailedToGetDynamicImage,
     FailedToConvertExtension,
+    ImageNotSpecified,
 }
 /// Implement Display trait for RusimgError.
 impl fmt::Display for RusimgError {
@@ -64,9 +66,11 @@ impl fmt::Display for RusimgError {
             RusimgError::InvalidTrimXY => write!(f, "Invalid trim XY"),
             RusimgError::ImageFormatCannotBeCompressed => write!(f, "this image format cannot be compressed"),
             RusimgError::UnsupportedFileExtension => write!(f, "Unsupported file extension"),
+            RusimgError::UnsupportedFeature => write!(f, "Unsupported feature"),
             RusimgError::ImageDataIsNone => write!(f, "Image data is None"),
             RusimgError::FailedToGetDynamicImage => write!(f, "Failed to get dynamic image"),
             RusimgError::FailedToConvertExtension => write!(f, "Failed to convert extension"),
+            RusimgError::ImageNotSpecified => write!(f, "Image not specified"),
         }
     }
 }
@@ -123,6 +127,7 @@ pub enum Extension {
 impl fmt::Display for Extension {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
+            Extension::Empty => write!(f, "empty"),
             Extension::Bmp => write!(f, "bmp"),
             Extension::Jpeg => write!(f, "jpeg"),
             Extension::Png => write!(f, "png"),
@@ -145,7 +150,7 @@ impl RusImg {
     /// Get image size.
     /// This uses the ``get_size()`` function from ``BackendTrait``.
     pub fn get_image_size(&self) -> Result<ImgSize, RusimgError> {
-        let size = self.data.get_size();
+        let size = self.data.get_size()?;
         Ok(size)
     }
 
@@ -197,10 +202,11 @@ impl RusImg {
     /// This uses the ``get_dynamic_image()`` function to get the DynamicImage object, ``get_metadata_src()`` to get the metadata, and ``compress()`` to compress the image.
     pub fn convert(&mut self, new_extension: &Extension) -> Result<(), RusimgError> {
         let dynamic_image = self.data.get_dynamic_image()?;
-        let filepath = self.data.get_source_filepath();
-        let metadata = self.data.get_metadata_src();
+        let filepath = self.data.get_source_filepath()?;
+        let metadata = self.data.get_metadata_src()?;
 
         let new_image: Box<(dyn BackendTrait)> = match new_extension {
+            Extension::Empty => return Err(RusimgError::UnsupportedFileExtension),
             Extension::Bmp => {
                 backend::convert_to_bmp_image(dynamic_image, filepath, metadata)?
             },
@@ -245,7 +251,7 @@ impl RusImg {
 
     /// Get input file path.
     /// This returns the file path of the image.
-    pub fn get_input_filepath(&self) -> PathBuf {
+    pub fn get_input_filepath(&self) -> Result<PathBuf, RusimgError> {
         self.data.get_source_filepath()
     }
 
@@ -260,9 +266,9 @@ impl RusImg {
         self.data.save(path_buf)?;
 
         let ret = SaveStatus {
-            output_path: self.data.get_destination_filepath().clone().or(None),
-            before_filesize: self.data.get_metadata_src().len(),
-            after_filesize: self.data.get_metadata_dest().as_ref().or(None).map(|m| m.len())
+            output_path: self.data.get_destination_filepath()?.clone().or(None),
+            before_filesize: self.data.get_metadata_src()?.len(),
+            after_filesize: self.data.get_metadata_dest()?.as_ref().or(None).map(|m| m.len())
         };
         Ok(ret)
     }
@@ -446,7 +452,7 @@ mod tests {
         generate_test_image(filename, width, height);
         let path = Path::new(filename);
         let img = RusImg::open(path).unwrap();
-        let input_filepath = img.get_input_filepath();
+        let input_filepath = img.get_input_filepath().unwrap();
         assert_eq!(input_filepath, Path::new(filename));
         std::fs::remove_file(filename).unwrap();
     }
