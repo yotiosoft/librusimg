@@ -13,9 +13,9 @@ pub struct PngImage {
     width: usize,
     height: usize,
     operations_count: u32,
-    pub metadata_input: Metadata,
+    pub metadata_input: Option<Metadata>,
     pub metadata_output: Option<Metadata>,
-    pub filepath_input: PathBuf,
+    pub filepath_input: Option<PathBuf>,
     pub filepath_output: Option<PathBuf>,
 }
 
@@ -23,8 +23,6 @@ impl BackendTrait for PngImage {
     /// Import an image from a DynamicImage object.
     fn import(image: Option<DynamicImage>, source_path: Option<PathBuf>, source_metadata: Option<Metadata>) -> Result<Self, RusimgError> {
         let image = image.ok_or(RusimgError::ImageNotSpecified)?;
-        let source_path = source_path.ok_or(RusimgError::ImageNotSpecified)?; // 画像のパスが指定されていない場合はエラー
-        let source_metadata = source_metadata.ok_or(RusimgError::ImageNotSpecified)?;
         let (width, height) = (image.width() as usize, image.height() as usize);
 
         let mut new_binary_data = Vec::new();
@@ -61,9 +59,9 @@ impl BackendTrait for PngImage {
             width,
             height,
             operations_count: 0,
-            metadata_input: metadata,
+            metadata_input: Some(metadata),
             metadata_output: None,
-            filepath_input: path,
+            filepath_input: Some(path),
             filepath_output: None,
         })
     }
@@ -198,8 +196,8 @@ impl BackendTrait for PngImage {
     }
 
     /// Get the source file path.
-    fn get_source_filepath(&self) -> Result<PathBuf, RusimgError> {
-        Ok(self.filepath_input.clone())
+    fn get_source_filepath(&self) -> Option<PathBuf> {
+        self.filepath_input.clone()
     }
 
     /// Get the destination file path.
@@ -208,13 +206,13 @@ impl BackendTrait for PngImage {
     }
 
     /// Get the source metadata.
-    fn get_metadata_src(&self) -> Result<Metadata, RusimgError> {
-        Ok(self.metadata_input.clone())
+    fn get_metadata_src(&self) -> Option<Metadata> {
+        self.metadata_input.clone()
     }
 
     /// Get the destination metadata.
-    fn get_metadata_dest(&self) -> Result<Option<Metadata>, RusimgError> {
-        Ok(self.metadata_output.clone())
+    fn get_metadata_dest(&self) -> Option<Metadata> {
+        self.metadata_output.clone()
     }
 
     /// Get the image size.

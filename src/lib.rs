@@ -38,6 +38,7 @@ pub enum RusimgError {
     FailedToGetDynamicImage,
     FailedToConvertExtension,
     ImageNotSpecified,
+    SourcePathMustBeSpecified,
 }
 /// Implement Display trait for RusimgError.
 impl fmt::Display for RusimgError {
@@ -71,6 +72,7 @@ impl fmt::Display for RusimgError {
             RusimgError::FailedToGetDynamicImage => write!(f, "Failed to get dynamic image"),
             RusimgError::FailedToConvertExtension => write!(f, "Failed to convert extension"),
             RusimgError::ImageNotSpecified => write!(f, "Image not specified"),
+            RusimgError::SourcePathMustBeSpecified => write!(f, "Source path must be specified"),
         }
     }
 }
@@ -108,7 +110,7 @@ impl ImgSize {
 #[derive(Debug, Clone, PartialEq)]
 pub struct SaveStatus {
     pub output_path: Option<PathBuf>,
-    pub before_filesize: u64,
+    pub before_filesize: Option<u64>,
     pub after_filesize: Option<u64>,
 }
 
@@ -202,8 +204,8 @@ impl RusImg {
     /// This uses the ``get_dynamic_image()`` function to get the DynamicImage object, ``get_metadata_src()`` to get the metadata, and ``compress()`` to compress the image.
     pub fn convert(&mut self, new_extension: &Extension) -> Result<(), RusimgError> {
         let dynamic_image = self.data.get_dynamic_image()?;
-        let filepath = self.data.get_source_filepath()?;
-        let metadata = self.data.get_metadata_src()?;
+        let filepath = self.data.get_source_filepath();
+        let metadata = self.data.get_metadata_src();
 
         let new_image: Box<(dyn BackendTrait)> = match new_extension {
             Extension::Empty => return Err(RusimgError::UnsupportedFileExtension),
@@ -252,7 +254,7 @@ impl RusImg {
     /// Get input file path.
     /// This returns the file path of the image.
     pub fn get_input_filepath(&self) -> Result<PathBuf, RusimgError> {
-        self.data.get_source_filepath()
+        self.data.get_source_filepath().ok_or(RusimgError::SourcePathMustBeSpecified)
     }
 
     /// Save an image to a file.
@@ -267,8 +269,16 @@ impl RusImg {
 
         let ret = SaveStatus {
             output_path: self.data.get_destination_filepath()?.clone().or(None),
-            before_filesize: self.data.get_metadata_src()?.len(),
-            after_filesize: self.data.get_metadata_dest()?.as_ref().or(None).map(|m| m.len())
+            before_filesize: if let Some(m) = self.data.get_metadata_src() {
+                Some(m.len())
+            } else {
+                None
+            },
+            after_filesize: if let Some(m) = self.data.get_metadata_dest() {
+                Some(m.len())
+            } else {
+                None
+            },
         };
         Ok(ret)
     }
@@ -307,7 +317,7 @@ mod tests {
         let path = Path::new(filename);
         let result = RusImg::open(path);
         assert!(result.is_ok());
-        std::fs::remove_file(filename).unwrap();
+        //std::fs::remove_file(filename).unwrap();
     }
 
     #[test]
@@ -321,7 +331,7 @@ mod tests {
         let size = img.get_image_size().unwrap();
         assert_eq!(size.width, 100);
         assert_eq!(size.height, 100);
-        std::fs::remove_file(filename).unwrap();
+        //std::fs::remove_file(filename).unwrap();
     }
 
     #[test]
@@ -335,7 +345,7 @@ mod tests {
         let size = img.resize(50).unwrap();
         assert_eq!(size.width, 50);
         assert_eq!(size.height, 50);
-        std::fs::remove_file(filename).unwrap();
+        //std::fs::remove_file(filename).unwrap();
     }
 
     #[test]
@@ -349,7 +359,7 @@ mod tests {
         let size = img.trim(10, 10, 50, 50).unwrap();
         assert_eq!(size.width, 50);
         assert_eq!(size.height, 50);
-        std::fs::remove_file(filename).unwrap();
+        //std::fs::remove_file(filename).unwrap();
     }
 
     #[test]
@@ -364,7 +374,7 @@ mod tests {
         let size = img.trim_rect(rect).unwrap();
         assert_eq!(size.width, 50);
         assert_eq!(size.height, 50);
-        std::fs::remove_file(filename).unwrap();
+        //std::fs::remove_file(filename).unwrap();
     }
 
     #[test]
@@ -377,7 +387,7 @@ mod tests {
         let mut img = RusImg::open(path).unwrap();
         let result = img.grayscale();
         assert!(result.is_ok());
-        std::fs::remove_file(filename).unwrap();
+        //std::fs::remove_file(filename).unwrap();
     }
 
     #[test]
@@ -390,7 +400,7 @@ mod tests {
         let mut img = RusImg::open(path).unwrap();
         let result = img.compress(Some(80.0));
         assert!(result.is_ok());
-        std::fs::remove_file(filename).unwrap();
+        //std::fs::remove_file(filename).unwrap();
     }
 
     #[test]
@@ -403,7 +413,7 @@ mod tests {
         let mut img = RusImg::open(path).unwrap();
         let result = img.convert(&Extension::Jpeg);
         assert!(result.is_ok());
-        std::fs::remove_file(filename).unwrap();
+        //std::fs::remove_file(filename).unwrap();
     }
 
     #[test]
@@ -417,7 +427,7 @@ mod tests {
         let dynamic_image = image::open(path).unwrap();
         let result = img.set_dynamic_image(dynamic_image);
         assert!(result.is_ok());
-        std::fs::remove_file(filename).unwrap();
+        //std::fs::remove_file(filename).unwrap();
     }
 
     #[test]
@@ -430,7 +440,7 @@ mod tests {
         let mut img = RusImg::open(path).unwrap();
         let result = img.get_dynamic_image();
         assert!(result.is_ok());
-        std::fs::remove_file(filename).unwrap();
+        //std::fs::remove_file(filename).unwrap();
     }
 
     #[test]
@@ -443,7 +453,7 @@ mod tests {
         let img = RusImg::open(path).unwrap();
         let extension = img.get_extension();
         assert_eq!(extension, Extension::Png);
-        std::fs::remove_file(filename).unwrap();
+        //std::fs::remove_file(filename).unwrap();
     }
 
     #[test]
@@ -456,7 +466,7 @@ mod tests {
         let img = RusImg::open(path).unwrap();
         let input_filepath = img.get_input_filepath().unwrap();
         assert_eq!(input_filepath, Path::new(filename));
-        std::fs::remove_file(filename).unwrap();
+        //std::fs::remove_file(filename).unwrap();
     }
 
     #[test]
@@ -470,6 +480,6 @@ mod tests {
         let result = img.save_image(Some("test_image_saved.png"));
         assert!(result.is_ok());
         std::fs::remove_file(filename).unwrap();
-        std::fs::remove_file("test_image_saved.png").unwrap();
+        //std::fs::remove_file("test_image_saved.png").unwrap();
     }
 }

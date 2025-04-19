@@ -98,7 +98,7 @@ pub trait BackendTrait {
     /// 
     /// returns:
     /// - Result<PathBuf, RusimgError>
-    fn get_source_filepath(&self) -> Result<PathBuf, RusimgError>;
+    fn get_source_filepath(&self) -> Option<PathBuf>;
     /// Get the destination file path.
     /// 
     /// returns:
@@ -108,12 +108,12 @@ pub trait BackendTrait {
     /// 
     /// returns:
     /// - Result<Metadata, RusimgError>
-    fn get_metadata_src(&self) -> Result<Metadata, RusimgError>;
+    fn get_metadata_src(&self) -> Option<Metadata>;
     /// Get the destination metadata.
     /// 
     /// returns:
     /// - Result<Option<Metadata>, RusimgError>
-    fn get_metadata_dest(&self) -> Result<Option<Metadata>, RusimgError>;
+    fn get_metadata_dest(&self) -> Option<Metadata>;
     /// Get the image size.
     /// 
     /// returns:
@@ -130,9 +130,13 @@ pub trait BackendTrait {
     /// 
     /// returns:
     /// - PathBuf object
-    fn get_save_filepath(&self, source_filepath: &PathBuf, destination_filepath: Option<PathBuf>, new_extension: &String) -> Result<PathBuf, RusimgError> {
+    fn get_save_filepath(&self, source_filepath: &Option<PathBuf>, destination_filepath: Option<PathBuf>, new_extension: &String) -> Result<PathBuf, RusimgError> {
         if let Some(path) = destination_filepath {
             if Path::new(&path).is_dir() {
+                let source_filepath = match source_filepath {
+                    Some(path) => path,
+                    None => return Err(RusimgError::SourcePathMustBeSpecified),
+                };
                 let filename = match Path::new(&source_filepath).file_name() {
                     Some(filename) => filename,
                     None => return Err(RusimgError::FailedToGetFilename(source_filepath.clone())),
@@ -144,6 +148,10 @@ pub trait BackendTrait {
             }
         }
         else {
+            let source_filepath = match source_filepath {
+                Some(path) => path,
+                None => return Err(RusimgError::SourcePathMustBeSpecified),
+            };
             Ok(Path::new(&source_filepath).with_extension(new_extension))
         }
     }
@@ -252,47 +260,47 @@ pub fn new_image() -> Result<RusImg, RusimgError> {
 /// If the bmp feature is enabled, it will convert the DynamicImage to a BMP image.
 /// If not, it will return an UnsupportedFileExtension error.
 #[cfg(feature="bmp")]
-pub fn convert_to_bmp_image(dynamic_image: DynamicImage, filepath: PathBuf, metadata: Metadata) -> Result<Box<(dyn BackendTrait)>, RusimgError> {
-    let bmp = bmp::BmpImage::import(Some(dynamic_image), Some(filepath), Some(metadata))?;
+pub fn convert_to_bmp_image(dynamic_image: DynamicImage, filepath: Option<PathBuf>, metadata: Option<Metadata>) -> Result<Box<(dyn BackendTrait)>, RusimgError> {
+    let bmp = bmp::BmpImage::import(Some(dynamic_image), filepath, metadata)?;
     Ok(Box::new(bmp))
 }
 #[cfg(not(feature="bmp"))]
-pub fn convert_to_bmp_image(_dynamic_image: DynamicImage, _filepath: PathBuf, _metadata: Metadata) -> Result<Box<(dyn BackendTrait)>, RusimgError> {
+pub fn convert_to_bmp_image(_dynamic_image: DynamicImage, _filepath: Option<PathBuf>, _metadata: Option<Metadata>) -> Result<Box<(dyn BackendTrait)>, RusimgError> {
     Err(RusimgError::UnsupportedFileExtension)
 }
 /// Convert a DynamicImage object to a JPEG image object.
 /// If the jpeg feature is enabled, it will convert the DynamicImage to a JPEG image.
 /// If not, it will return an UnsupportedFileExtension error.
 #[cfg(feature="jpeg")]
-pub fn convert_to_jpeg_image(dynamic_image: DynamicImage, filepath: PathBuf, metadata: Metadata) -> Result<Box<(dyn BackendTrait)>, RusimgError> {
-    let jpeg = jpeg::JpegImage::import(Some(dynamic_image), Some(filepath), Some(metadata))?;
+pub fn convert_to_jpeg_image(dynamic_image: DynamicImage, filepath: Option<PathBuf>, metadata: Option<Metadata>) -> Result<Box<(dyn BackendTrait)>, RusimgError> {
+    let jpeg = jpeg::JpegImage::import(Some(dynamic_image), filepath, metadata)?;
     Ok(Box::new(jpeg))
 }
 #[cfg(not(feature="jpeg"))]
-pub fn convert_to_jpeg_image(_dynamic_image: DynamicImage, _filepath: PathBuf, _metadata: Metadata) -> Result<Box<(dyn BackendTrait)>, RusimgError> {
+pub fn convert_to_jpeg_image(_dynamic_image: DynamicImage, _filepath: Option<PathBuf>, _metadata: Option<Metadata>) -> Result<Box<(dyn BackendTrait)>, RusimgError> {
     Err(RusimgError::UnsupportedFileExtension)
 }
 /// Convert a DynamicImage object to a PNG image object.
 /// If the png feature is enabled, it will convert the DynamicImage to a PNG image.
 /// If not, it will return an UnsupportedFileExtension error.
 #[cfg(feature="png")]
-pub fn convert_to_png_image(dynamic_image: DynamicImage, filepath: PathBuf, metadata: Metadata) -> Result<Box<(dyn BackendTrait)>, RusimgError> {
-    let png = png::PngImage::import(Some(dynamic_image), Some(filepath), Some(metadata))?;
+pub fn convert_to_png_image(dynamic_image: DynamicImage, filepath: Option<PathBuf>, metadata: Option<Metadata>) -> Result<Box<(dyn BackendTrait)>, RusimgError> {
+    let png = png::PngImage::import(Some(dynamic_image), filepath, metadata)?;
     Ok(Box::new(png))
 }
 #[cfg(not(feature="png"))]
-pub fn convert_to_png_image(_dynamic_image: DynamicImage, _filepath: PathBuf, _metadata: Metadata) -> Result<Box<(dyn BackendTrait)>, RusimgError> {
+pub fn convert_to_png_image(_dynamic_image: DynamicImage, _filepath: Option<PathBuf>, _metadata: Option<Metadata>) -> Result<Box<(dyn BackendTrait)>, RusimgError> {
     Err(RusimgError::UnsupportedFileExtension)
 }
 /// Convert a DynamicImage object to a WebP image object.
 /// If the webp feature is enabled, it will convert the DynamicImage to a WebP image.
 /// If not, it will return an UnsupportedFileExtension error.
 #[cfg(feature="webp")]
-pub fn convert_to_webp_image(dynamic_image: DynamicImage, filepath: PathBuf, metadata: Metadata) -> Result<Box<(dyn BackendTrait)>, RusimgError> {
-    let webp = webp::WebpImage::import(Some(dynamic_image), Some(filepath), Some(metadata))?;
+pub fn convert_to_webp_image(dynamic_image: DynamicImage, filepath: Option<PathBuf>, metadata: Option<Metadata>) -> Result<Box<(dyn BackendTrait)>, RusimgError> {
+    let webp = webp::WebpImage::import(Some(dynamic_image), filepath, metadata)?;
     Ok(Box::new(webp))
 }
 #[cfg(not(feature="webp"))]
-pub fn convert_to_webp_image(_dynamic_image: DynamicImage, _filepath: PathBuf, _metadata: Metadata) -> Result<Box<(dyn BackendTrait)>, RusimgError> {
+pub fn convert_to_webp_image(_dynamic_image: DynamicImage, _filepath: Option<PathBuf>, _metadata: Option<Metadata>) -> Result<Box<(dyn BackendTrait)>, RusimgError> {
     Err(RusimgError::UnsupportedFileExtension)
 }

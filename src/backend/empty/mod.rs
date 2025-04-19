@@ -115,8 +115,8 @@ impl BackendTrait for EmptyImage {
     }
 
     /// Get the source file path.
-    fn get_source_filepath(&self) -> Result<PathBuf, RusimgError> {
-        Err(RusimgError::UnsupportedFeature)
+    fn get_source_filepath(&self) -> Option<PathBuf> {
+        None
     }
 
     /// Get the destination file path.
@@ -125,13 +125,13 @@ impl BackendTrait for EmptyImage {
     }
 
     /// Get the source metadata.
-    fn get_metadata_src(&self) -> Result<Metadata, RusimgError> {
-        Err(RusimgError::UnsupportedFeature)
+    fn get_metadata_src(&self) -> Option<Metadata> {
+        None
     }
 
     /// Get the destination metadata.
-    fn get_metadata_dest(&self) -> Result<Option<Metadata>, RusimgError> {
-        Err(RusimgError::UnsupportedFeature)
+    fn get_metadata_dest(&self) -> Option<Metadata> {
+        None
     }
 
     /// Get the image size.

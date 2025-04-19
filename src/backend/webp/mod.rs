@@ -14,9 +14,9 @@ pub struct WebpImage {
     height: usize,
     operations_count: u32,
     required_quality: Option<f32>,
-    pub metadata_input: Metadata,
+    pub metadata_input: Option<Metadata>,
     pub metadata_output: Option<Metadata>,
-    pub filepath_input: PathBuf,
+    pub filepath_input: Option<PathBuf>,
     pub filepath_output: Option<PathBuf>,
 }
 
@@ -24,8 +24,6 @@ impl BackendTrait for WebpImage {
     /// Import an image from a DynamicImage object.
     fn import(image: Option<DynamicImage>, source_path: Option<PathBuf>, source_metadata: Option<Metadata>) -> Result<Self, RusimgError> {
         let image = image.ok_or(RusimgError::ImageNotSpecified)?; // DynamicImage::new() ではなく、DynamicImage::open() で開く
-        let source_path = source_path.ok_or(RusimgError::ImageNotSpecified)?; // 画像のパスが指定されていない場合はエラー
-        let source_metadata = source_metadata.ok_or(RusimgError::ImageNotSpecified)?; // 画像のメタデータが指定されていない場合はエラー
         let (width, height) = (image.width() as usize, image.height() as usize);
 
         Ok(Self {
@@ -60,9 +58,9 @@ impl BackendTrait for WebpImage {
                 height,
                 operations_count: 0,
                 required_quality: None,
-                metadata_input: metadata,
+                metadata_input: Some(metadata),
                 metadata_output: None,
-                filepath_input: path,
+                filepath_input: Some(path),
                 filepath_output: None,
             })
         }
@@ -76,7 +74,11 @@ impl BackendTrait for WebpImage {
         let save_path = Self::get_save_filepath(&self, &self.filepath_input, path, &"webp".to_string())?;
 
         // 元が webp かつ操作回数が 0 なら encode しない
-        let source_is_webp = Path::new(&self.filepath_input).extension().and_then(|s| s.to_str()).unwrap_or("").to_string() == "webp";
+        let source_is_webp = if let Some(filepath_input) = &self.filepath_input {
+            Path::new(filepath_input).extension().and_then(|s| s.to_str()).unwrap_or("").to_string() == "webp"
+        } else {
+            false
+        };
         if source_is_webp && self.operations_count == 0 && self.image_bytes.is_some() {
             let mut file = std::fs::File::create(&save_path).map_err(|e| RusimgError::FailedToCreateFile(e.to_string()))?;
             file.write_all(self.image_bytes.as_ref().unwrap()).map_err(|e| RusimgError::FailedToWriteFIle(e.to_string()))?;
@@ -174,8 +176,8 @@ impl BackendTrait for WebpImage {
     }
 
     /// Get the source file path.
-    fn get_source_filepath(&self) -> Result<PathBuf, RusimgError> {
-        Ok(self.filepath_input.clone())
+    fn get_source_filepath(&self) -> Option<PathBuf> {
+        self.filepath_input.clone()
     }
 
     /// Get the destination file path.
@@ -184,13 +186,13 @@ impl BackendTrait for WebpImage {
     }
 
     /// Get the source metadata.
-    fn get_metadata_src(&self) -> Result<Metadata, RusimgError> {
-        Ok(self.metadata_input.clone())
+    fn get_metadata_src(&self) -> Option<Metadata> {
+        self.metadata_input.clone()
     }
 
     /// Get the destination metadata.
-    fn get_metadata_dest(&self) -> Result<Option<Metadata>, RusimgError> {
-        Ok(self.metadata_output.clone())
+    fn get_metadata_dest(&self) -> Option<Metadata> {
+        self.metadata_output.clone()
     }
 
     /// Get the image size.
