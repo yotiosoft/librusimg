@@ -9,22 +9,25 @@ use super::super::{ImgSize, RusimgError, BackendTrait, Rect};
 pub struct EmptyImage {
     pub image: Option<DynamicImage>,
     size: Option<ImgSize>,
+    source_path: Option<PathBuf>,
 }
 
 impl BackendTrait for EmptyImage {
     /// Import an image from a DynamicImage object.
-    fn import(image: Option<DynamicImage>, _source_path: Option<PathBuf>, _source_metadata: Option<Metadata>) -> Result<Self, RusimgError> {
+    fn import(image: Option<DynamicImage>, source_path: Option<PathBuf>, _source_metadata: Option<Metadata>) -> Result<Self, RusimgError> {
         if image.is_some() {
             let image = image.unwrap();
             let size = ImgSize { width: image.width() as usize, height: image.height() as usize };
             Ok(Self {
                 image: Some(image),
                 size: Some(size),
+                source_path,
             })
         } else {
             Ok(Self {
                 image: None,
                 size: None,
+                source_path,
             })
         }
     }
