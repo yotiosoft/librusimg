@@ -423,12 +423,12 @@ mod tests {
         generate_test_image(filename, width, height);
         let path = Path::new(filename);
         let mut img = RusImg::open(path).unwrap();
-        let result = img.convert(&Extension::Jpeg);
+        let result = img.convert(&Extension::Webp);
         assert!(result.is_ok());
         // Is the extension changed?
         img.save_image(None).unwrap();
         // file exist check
-        let new_filename = filename.replace(".png", ".jpeg");
+        let new_filename = filename.replace(".png", ".webp");
         assert!(Path::new(&new_filename).exists());
         // remove test file
         std::fs::remove_file(&new_filename).unwrap();
