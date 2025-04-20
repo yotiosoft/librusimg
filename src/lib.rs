@@ -310,7 +310,7 @@ mod tests {
 
     #[test]
     fn test_open_image() {
-        let filename = "test_image.png";
+        let filename = "test_image1.png";
         let width = 100;
         let height = 100;
         generate_test_image(filename, width, height);
@@ -322,7 +322,7 @@ mod tests {
 
     #[test]
     fn test_get_image_size() {
-        let filename = "test_image.png";
+        let filename = "test_image2.png";
         let width = 100;
         let height = 100;
         generate_test_image(filename, width, height);
@@ -336,7 +336,7 @@ mod tests {
 
     #[test]
     fn test_resize_image() {
-        let filename = "test_image.png";
+        let filename = "test_image3.png";
         let width = 100;
         let height = 100;
         generate_test_image(filename, width, height);
@@ -350,7 +350,7 @@ mod tests {
 
     #[test]
     fn test_trim_image() {
-        let filename = "test_image.png";
+        let filename = "test_image4.png";
         let width = 100;
         let height = 100;
         generate_test_image(filename, width, height);
@@ -364,7 +364,7 @@ mod tests {
 
     #[test]
     fn test_trim_rect_image() {
-        let filename = "test_image.png";
+        let filename = "test_image5.png";
         let width = 100;
         let height = 100;
         generate_test_image(filename, width, height);
@@ -379,7 +379,7 @@ mod tests {
 
     #[test]
     fn test_grayscale_image() {
-        let filename = "test_image.png";
+        let filename = "test_image6.png";
         let width = 100;
         let height = 100;
         generate_test_image(filename, width, height);
@@ -387,25 +387,37 @@ mod tests {
         let mut img = RusImg::open(path).unwrap();
         let result = img.grayscale();
         assert!(result.is_ok());
+        // color check
+        let dynamic_image = img.get_dynamic_image().unwrap();
+        let img_data = dynamic_image.to_rgb8();
+        for pixel in img_data.pixels() {
+            assert_eq!(pixel[0], pixel[1]);
+            assert_eq!(pixel[1], pixel[2]);
+        }
         std::fs::remove_file(filename).unwrap();
     }
 
     #[test]
     fn test_compress_image() {
-        let filename = "test_image.png";
+        let filename = "test_image7.png";
         let width = 100;
         let height = 100;
         generate_test_image(filename, width, height);
         let path = Path::new(filename);
         let mut img = RusImg::open(path).unwrap();
-        let result = img.compress(Some(80.0));
+        let result = img.compress(Some(30.0));
         assert!(result.is_ok());
+        // size check
+        img.save_image(None).unwrap();
+        let before_size = img.data.get_metadata_src().unwrap().len();
+        let after_size = img.data.get_metadata_dest().unwrap().len();
+        assert!(after_size < before_size);
         std::fs::remove_file(filename).unwrap();
     }
 
     #[test]
     fn test_convert_image() {
-        let filename = "test_image.png";
+        let filename = "test_image8.png";
         let width = 100;
         let height = 100;
         generate_test_image(filename, width, height);
@@ -413,12 +425,19 @@ mod tests {
         let mut img = RusImg::open(path).unwrap();
         let result = img.convert(&Extension::Jpeg);
         assert!(result.is_ok());
+        // Is the extension changed?
+        img.save_image(None).unwrap();
+        // file exist check
+        let new_filename = filename.replace(".png", ".jpeg");
+        assert!(Path::new(&new_filename).exists());
+        // remove test file
+        std::fs::remove_file(&new_filename).unwrap();
         std::fs::remove_file(filename).unwrap();
     }
 
     #[test]
     fn test_set_dynamic_image() {
-        let filename = "test_image.png";
+        let filename = "test_image9.png";
         let width = 100;
         let height = 100;
         generate_test_image(filename, width, height);
@@ -432,7 +451,7 @@ mod tests {
 
     #[test]
     fn test_get_dynamic_image() {
-        let filename = "test_image.png";
+        let filename = "test_image10.png";
         let width = 100;
         let height = 100;
         generate_test_image(filename, width, height);
@@ -445,7 +464,7 @@ mod tests {
 
     #[test]
     fn test_get_extension() {
-        let filename = "test_image.png";
+        let filename = "test_image11.png";
         let width = 100;
         let height = 100;
         generate_test_image(filename, width, height);
@@ -458,7 +477,7 @@ mod tests {
 
     #[test]
     fn test_get_input_filepath() {
-        let filename = "test_image.png";
+        let filename = "test_image12.png";
         let width = 100;
         let height = 100;
         generate_test_image(filename, width, height);
@@ -471,7 +490,7 @@ mod tests {
 
     #[test]
     fn test_save_image() {
-        let filename = "test_image.png";
+        let filename = "test_image13.png";
         let width = 100;
         let height = 100;
         generate_test_image(filename, width, height);
