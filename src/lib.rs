@@ -425,13 +425,23 @@ mod tests {
         let mut img = RusImg::open(path).unwrap();
         let result = img.convert(&Extension::Webp);
         assert!(result.is_ok());
-        // Is the extension changed?
-        img.save_image(None).unwrap();
-        // file exist check
-        let new_filename = filename.replace(".png", ".webp");
-        assert!(Path::new(&new_filename).exists());
-        // remove test file
-        std::fs::remove_file(&new_filename).unwrap();
+        // file types
+        let extensions = vec!["bmp", "jpg", "webp"];
+        for ext in extensions {
+            let new_filename = filename.replace(".png", &format!(".{}", ext));
+            let new_path = Path::new(&new_filename);
+            if new_path.exists() {
+                assert!(Path::new(&new_filename).exists());
+                // Can I open the new image?
+                let mut new_img = RusImg::open(new_path).unwrap();
+                let dynamic_new_img = new_img.get_dynamic_image().unwrap();
+                assert_eq!(dynamic_new_img.width(), 100);
+                assert_eq!(dynamic_new_img.height(), 100);
+                assert_eq!(new_img.extension.to_string(), ext);
+                // Clean up the new image file
+                std::fs::remove_file(new_filename).unwrap();
+            }
+        }
         std::fs::remove_file(filename).unwrap();
     }
 
