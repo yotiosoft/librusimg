@@ -1,0 +1,26 @@
+use std::fmt;
+
+/// Image extension object.
+/// By default, Rusimg supports BMP, JPEG, PNG, and WebP.
+/// If you want to use another format, you can use ExternalFormat like ``Extension::ExternalFormat("tiff".to_string())``.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Extension {
+    Empty,
+    Bmp,
+    Jpeg,
+    Png,
+    Webp,
+    ExternalFormat(String),
+}
+impl fmt::Display for Extension {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Extension::Empty => write!(f, "empty"),
+            Extension::Bmp => write!(f, "bmp"),
+            Extension::Jpeg => write!(f, "jpeg"),
+            Extension::Png => write!(f, "png"),
+            Extension::Webp => write!(f, "webp"),
+            Extension::ExternalFormat(s) => write!(f, "{}", s),
+        }
+    }
+}

@@ -1,142 +1,20 @@
 use std::path::{Path, PathBuf};
-use std::fmt;
 use image::DynamicImage;
 
 pub mod backend;
 pub use backend::*;
+pub mod structs;
+pub use structs::*;
+pub mod errors;
+pub use errors::*;
+pub mod extension;
+pub use extension::*;
 
 /// RusImg object.
 /// This object contains an image object and its metadata.
 pub struct RusImg {
     pub extension: Extension,
     pub data: Box<(dyn BackendTrait)>,
-}
-
-/// Error type for Rusimg.
-/// This error type is used in Rusimg functions.
-/// Some error types have a string parameter to store the error message.
-#[derive(Debug, Clone, PartialEq)]
-pub enum RusimgError {
-    FailedToOpenFile(String),
-    FailedToReadFile(String),
-    FailedToGetMetadata(String),
-    FailedToOpenImage(String),
-    FailedToSaveImage(String),
-    FailedToCopyBinaryData(String),
-    FailedToGetFilename(PathBuf),
-    FailedToCreateFile(String),
-    FailedToWriteFIle(String),
-    FailedToDecodeWebp,
-    FailedToEncodeWebp(String),
-    FailedToCompressImage(Option<String>),
-    FailedToConvertPathToString,
-    InvalidTrimXY,
-    ImageFormatCannotBeCompressed,
-    UnsupportedFileExtension,
-    UnsupportedFeature,
-    ImageDataIsNone,
-    FailedToGetDynamicImage,
-    FailedToConvertExtension,
-    ImageNotSpecified,
-    SourcePathMustBeSpecified,
-}
-/// Implement Display trait for RusimgError.
-impl fmt::Display for RusimgError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            RusimgError::FailedToOpenFile(s) => write!(f, "Failed to open file: \n\t{}", s),
-            RusimgError::FailedToReadFile(s) => write!(f, "Failed to read file: \n\t{}", s),
-            RusimgError::FailedToGetMetadata(s) => write!(f, "Failed to get metadata: \n\t{}", s),
-            RusimgError::FailedToOpenImage(s) => write!(f, "Failed to open image: \n\t{}", s),
-            RusimgError::FailedToSaveImage(s) => write!(f, "Failed to save image: \n\t{}", s),
-            RusimgError::FailedToCopyBinaryData(s) => write!(f, "Failed to copy binary data to memory: \n\t{}", s),
-            RusimgError::FailedToGetFilename(s) => write!(f, "Failed to get filename: \n\t{}", s.display()),
-            RusimgError::FailedToCreateFile(s) => write!(f, "Failed to create file: \n\t{}", s),
-            RusimgError::FailedToWriteFIle(s) => write!(f, "Failed to write file: \n\t{}", s),
-            RusimgError::FailedToDecodeWebp => write!(f, "Failed to decode webp"),
-            RusimgError::FailedToEncodeWebp(s) => write!(f, "Failed to encode webp: \n\t{}", s),
-            RusimgError::FailedToCompressImage(s) => {
-                if let Some(s) = s {
-                    write!(f, "Failed to compress image: \n\t{}", s)
-                }
-                else {
-                    write!(f, "Failed to compress image")
-                }
-            }
-            RusimgError::FailedToConvertPathToString => write!(f, "Failed to convert path to string"),
-            RusimgError::InvalidTrimXY => write!(f, "Invalid trim XY"),
-            RusimgError::ImageFormatCannotBeCompressed => write!(f, "this image format cannot be compressed"),
-            RusimgError::UnsupportedFileExtension => write!(f, "Unsupported file extension"),
-            RusimgError::UnsupportedFeature => write!(f, "Unsupported feature"),
-            RusimgError::ImageDataIsNone => write!(f, "Image data is None"),
-            RusimgError::FailedToGetDynamicImage => write!(f, "Failed to get dynamic image"),
-            RusimgError::FailedToConvertExtension => write!(f, "Failed to convert extension"),
-            RusimgError::ImageNotSpecified => write!(f, "Image not specified"),
-            RusimgError::SourcePathMustBeSpecified => write!(f, "Source path must be specified"),
-        }
-    }
-}
-
-
-/// Rectangle object for rusimg.
-/// This object is used for trimming an image.
-#[derive(Debug, Clone, PartialEq)]
-pub struct Rect {
-    pub x: u32,
-    pub y: u32,
-    pub w: u32,
-    pub h: u32,
-}
-
-/// Image size object.
-#[derive(Debug, Clone, PartialEq, Copy, Default)]
-pub struct ImgSize {
-    pub width: usize,
-    pub height: usize,
-}
-impl ImgSize {
-    pub fn new(width: usize, height: usize) -> Self {
-        Self {
-            width,
-            height,
-        }
-    }
-}
-
-/// Save status object.
-/// This object is used for tracking the status of saving an image.
-/// It contains the output file path, the file size before saving, and the file size after saving.
-/// If the image has compression, the file size after saving will be different from the file size before saving.
-#[derive(Debug, Clone, PartialEq)]
-pub struct SaveStatus {
-    pub output_path: Option<PathBuf>,
-    pub before_filesize: Option<u64>,
-    pub after_filesize: Option<u64>,
-}
-
-/// Image extension object.
-/// By default, Rusimg supports BMP, JPEG, PNG, and WebP.
-/// If you want to use another format, you can use ExternalFormat like ``Extension::ExternalFormat("tiff".to_string())``.
-#[derive(Debug, Clone, PartialEq)]
-pub enum Extension {
-    Empty,
-    Bmp,
-    Jpeg,
-    Png,
-    Webp,
-    ExternalFormat(String),
-}
-impl fmt::Display for Extension {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            Extension::Empty => write!(f, "empty"),
-            Extension::Bmp => write!(f, "bmp"),
-            Extension::Jpeg => write!(f, "jpeg"),
-            Extension::Png => write!(f, "png"),
-            Extension::Webp => write!(f, "webp"),
-            Extension::ExternalFormat(s) => write!(f, "{}", s),
-        }
-    }
 }
 
 /// RusImg object implementation.
