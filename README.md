@@ -118,6 +118,20 @@ If the destination file path is not specified, the image is saved to the same fi
 pub fn save_image(&mut self, path: Option<&str>) -> Result<SaveStatus, RusimgError>;
 ```
 
+## Want to try it out?
+
+[rusimg](https://github.com/yotiosoft/rusimg) is a command line tool that uses this library.
+You can try it out by running the following command.
+
+```bash
+$ cargo install rusimg
+```
+Then, you can run the following command to convert an image.
+
+```bash
+$ rusimg -i <input_file> -o <output_file> -f <output_format> -q <quality> -r <resize_ratio> -t <trim_x,trim_y,trim_w,trim_h> -g
+```
+
 ## Add new image type & backend yourself
 
 With implementing the ``BackendTrait`` trait, you can add a new image format backend to librusimg that is not currently supported.  
