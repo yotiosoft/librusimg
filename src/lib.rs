@@ -79,6 +79,10 @@ impl RusImg {
     /// Set quality to 100 to keep the original quality.
     /// This uses the ``compress()`` function from ``BackendTrait``.
     pub fn compress(&mut self, quality: Option<f32>) -> Result<(), RusimgError> {
+        if quality.is_some() && (quality.unwrap() < 0.0 || quality.unwrap() > 100.0) {
+            return Err(RusimgError::InvalidCompressionLevel);
+        }
+
         self.data.compress(quality)?;
         Ok(())
     }
@@ -411,5 +415,143 @@ mod tests {
         } else {
             panic!("Expected an error, but got Ok");
         }
+    }
+
+    #[test]
+    fn test_err_failed_to_open_image() {
+        // Not supported image format
+        let path = Path::new("test_image1.txt");
+        // Create a dummy text file
+        std::fs::write(path, "This is a test file.").unwrap();
+        // Attempt to open the text file as an image
+        let result = RusImg::open(path);
+        // Remove the dummy text file
+        std::fs::remove_file(path).unwrap();
+        // Check if the error is as expected
+        assert!(result.is_err());
+        if let Err(e) = result {
+            if let RusimgError::FailedToOpenImage(_) = e {
+                // Expected error
+            } else {
+                panic!("Unexpected error: {:?}", e);
+            }
+        } else {
+            panic!("Expected an error, but got Ok");
+        }
+    }
+
+    #[test]
+    fn test_err_failed_to_save_image() {
+        let filename = "test_image14.png";
+        let path = Path::new(filename);
+        _ = RusImg::new(path);
+        let width = 100;
+        let height = 100;
+        generate_test_image(filename, width, height);
+        let path = Path::new(filename);
+        let mut img = RusImg::open(path).unwrap();
+        let result = img.save_image(Some("test_image/invalid_path/test_image_saved.png"));
+        assert!(result.is_err());
+        if let Err(e) = result {
+            if let RusimgError::FailedToSaveImage(_) = e {
+                // Expected error
+            } else {
+                panic!("Unexpected error: {:?}", e);
+            }
+        } else {
+            panic!("Expected an error, but got Ok");
+        }
+        // Clean up the test image file
+        std::fs::remove_file(filename).unwrap();
+    }
+
+    #[test]
+    fn test_err_invalid_compression_level() {
+        let filename = "test_image15.png";
+        let width = 100;
+        let height = 100;
+        generate_test_image(filename, width, height);
+        let path = Path::new(filename);
+        let mut img = RusImg::open(path).unwrap();
+        let result1 = img.compress(Some(150.0));
+        let result2 = img.compress(Some(-10.0));
+        assert!(result1.is_err());
+        assert!(result2.is_err());
+        if let Err(e) = result1 {
+            if let RusimgError::InvalidCompressionLevel = e {
+                // Expected error
+            } else {
+                panic!("Unexpected error: {:?}", e);
+            }
+        } else {
+            panic!("Expected an error, but got Ok");
+        }
+        if let Err(e) = result2 {
+            if let RusimgError::InvalidCompressionLevel = e {
+                // Expected error
+            } else {
+                panic!("Unexpected error: {:?}", e);
+            }
+        } else {
+            panic!("Expected an error, but got Ok");
+        }
+        std::fs::remove_file(filename).unwrap();
+    }
+
+    #[test]
+    fn test_err_invalid_trim_xy() {
+        let filename = "test_image16.png";
+        let width = 100;
+        let height = 100;
+        generate_test_image(filename, width, height);
+        let path = Path::new(filename);
+        let mut img = RusImg::open(path).unwrap();
+        let result = img.trim(150, 150, 50, 50);
+        assert!(result.is_err());
+        if let Err(e) = result {
+            if let RusimgError::InvalidTrimXY = e {
+                // Expected error
+            } else {
+                panic!("Unexpected error: {:?}", e);
+            }
+        } else {
+            panic!("Expected an error, but got Ok");
+        }
+        std::fs::remove_file(filename).unwrap();
+    }
+
+    #[test]
+    fn test_err_image_format_cannot_be_compressed() {
+        let filename = "test_image17.bmp";
+        let width = 100;
+        let height = 100;
+        generate_test_image(filename, width, height);
+        let path = Path::new(filename);
+        let mut img = RusImg::open(path).unwrap();
+        let result = img.compress(Some(50.0));
+        assert!(result.is_err());
+        if let Err(e) = result {
+            if let RusimgError::ImageFormatCannotBeCompressed = e {
+                // Expected error
+            } else {
+                panic!("Unexpected error: {:?}", e);
+            }
+        } else {
+            panic!("Expected an error, but got Ok");
+        }
+        std::fs::remove_file(filename).unwrap();
+    }
+
+    #[test]
+    fn test_err_source_path_must_be_specified() {
+        let filename = "test_image18.png";
+        let width = 100;
+        let height = 100;
+        generate_test_image(filename, width, height);
+        let path = Path::new(filename);
+        let img = RusImg::open(path).unwrap();
+        let result = img.get_input_filepath();
+        assert!(result.is_ok());
+        std::fs::remove_file(filename).unwrap();
     }
 }

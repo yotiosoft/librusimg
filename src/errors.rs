@@ -19,13 +19,11 @@ pub enum RusimgError {
     FailedToEncodeWebp(String),
     FailedToCompressImage(Option<String>),
     FailedToConvertPathToString,
+    InvalidCompressionLevel,
     InvalidTrimXY,
     ImageFormatCannotBeCompressed,
     UnsupportedFileExtension,
     UnsupportedFeature,
-    ImageDataIsNone,
-    FailedToGetDynamicImage,
-    FailedToConvertExtension,
     ImageNotSpecified,
     SourcePathMustBeSpecified,
 }
@@ -53,13 +51,11 @@ impl fmt::Display for RusimgError {
                 }
             }
             RusimgError::FailedToConvertPathToString => write!(f, "Failed to convert path to string"),
+            RusimgError::InvalidCompressionLevel => write!(f, "Invalid compression level"),
             RusimgError::InvalidTrimXY => write!(f, "Invalid trim XY"),
             RusimgError::ImageFormatCannotBeCompressed => write!(f, "this image format cannot be compressed"),
             RusimgError::UnsupportedFileExtension => write!(f, "Unsupported file extension"),
             RusimgError::UnsupportedFeature => write!(f, "Unsupported feature"),
-            RusimgError::ImageDataIsNone => write!(f, "Image data is None"),
-            RusimgError::FailedToGetDynamicImage => write!(f, "Failed to get dynamic image"),
-            RusimgError::FailedToConvertExtension => write!(f, "Failed to convert extension"),
             RusimgError::ImageNotSpecified => write!(f, "Image not specified"),
             RusimgError::SourcePathMustBeSpecified => write!(f, "Source path must be specified"),
         }
