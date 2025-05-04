@@ -27,6 +27,13 @@ impl RusImg {
         backend::open_image(path)
     }
 
+    /// New image object.
+    /// This function will create a new image object based on the file extension.
+    /// It will return a RusImg object.
+    pub fn new(path: &Path) -> Result<Self, RusimgError> {
+        backend::new_image(path)
+    }
+
     /// Get image size.
     /// This uses the ``get_size()`` function from ``BackendTrait``.
     pub fn get_image_size(&self) -> Result<ImgSize, RusimgError> {
@@ -179,7 +186,7 @@ mod tests {
                 img.put_pixel(x, y, Rgb([r, g, b]));
             }
         }
-        let mut test_image = RusImg::open(Path::new(filename)).unwrap();
+        let mut test_image = RusImg::new(Path::new(filename)).unwrap();
         test_image.data.set_dynamic_image(DynamicImage::ImageRgb8(img)).unwrap();
         let new_extension = Extension::Png;
         test_image.convert(&new_extension).unwrap();
@@ -388,5 +395,21 @@ mod tests {
         assert!(result.is_ok());
         std::fs::remove_file(filename).unwrap();
         std::fs::remove_file("test_image_saved.png").unwrap();
+    }
+
+    #[test]
+    fn test_err_failed_to_open_file() {
+        let path = Path::new("non_existent_file.png");
+        let result = RusImg::open(path);
+        assert!(result.is_err());
+        if let Err(e) = result {
+            if let RusimgError::FailedToOpenFile(_) = e {
+                // Expected error
+            } else {
+                panic!("Unexpected error: {:?}", e);
+            }
+        } else {
+            panic!("Expected an error, but got Ok");
+        }
     }
 }

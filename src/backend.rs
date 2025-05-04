@@ -223,11 +223,6 @@ fn open_webp_image(_path: &Path, _buf: Vec<u8>, _metadata_input: Metadata) -> Re
 
 /// Open an image file and return a RusImg object.
 pub fn open_image(path: &Path) -> Result<RusImg, RusimgError> {
-    // If the file does not exist, make an empty image.
-    if !path.exists() {
-        return new_empty_image(path.to_path_buf());
-    }
-
     let mut raw_data = std::fs::File::open(&path.to_path_buf()).map_err(|e| RusimgError::FailedToOpenFile(e.to_string()))?;
     let mut buf = Vec::new();
     raw_data.read_to_end(&mut buf).map_err(|e| RusimgError::FailedToReadFile(e.to_string()))?;
