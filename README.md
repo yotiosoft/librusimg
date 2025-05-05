@@ -225,52 +225,7 @@ impl BackendTrait for MyBmpImage {
 
 ## Data types
 
-### Trait
-
-#### trait BackendTrait
-
-``BackendTrait`` is a trait that contains the image processing functions.
-
-```rust
-pub trait BackendTrait {
-    /// Import an image from a DynamicImage object.
-    fn import(image: DynamicImage, source_path: PathBuf, source_metadata: Metadata) -> Result<Self, RusimgError> where Self: Sized;
-    /// Open an image from a image buffer.
-    /// The ``path`` parameter is the file path of the image, but it is used for copying the file path to the object.
-    /// This returns a RusImg object.
-    fn open(path: PathBuf, image_buf: Vec<u8>, metadata: Metadata) -> Result<Self, RusimgError> where Self: Sized;
-    /// Save the image to a file to the ``path``.
-    fn save(&mut self, path: Option<PathBuf>) -> Result<(), RusimgError>;
-    /// Compress the image with the quality parameter.
-    fn compress(&mut self, quality: Option<f32>) -> Result<(), RusimgError>;
-    /// Resize the image with the resize_ratio parameter.
-    fn resize(&mut self, resize_ratio: u8) -> Result<ImgSize, RusimgError>;
-    /// Trim the image with the trim parameter.
-    /// The trim parameter is a Rect object.
-    fn trim(&mut self, trim: Rect) -> Result<ImgSize, RusimgError>;
-    /// Grayscale the image.
-    fn grayscale(&mut self);
-    /// Set a image::DynamicImage to the image object.
-    /// After setting the image, the image object will be updated.
-    fn set_dynamic_image(&mut self, image: DynamicImage) -> Result<(), RusimgError>;
-    /// Get a image::DynamicImage from the image object.
-    fn get_dynamic_image(&mut self) -> Result<DynamicImage, RusimgError>;
-    /// Get the source file path.
-    fn get_source_filepath(&self) -> PathBuf;
-    /// Get the destination file path.
-    fn get_destination_filepath(&self) -> Option<PathBuf>;
-    /// Get the source metadata.
-    fn get_metadata_src(&self) -> Metadata;
-    /// Get the destination metadata.
-    fn get_metadata_dest(&self) -> Option<Metadata>;
-    /// Get the image size.
-    fn get_size(&self) -> ImgSize;
-    /// Get a file path for saving an image.
-    fn get_save_filepath(&self, source_filepath: &PathBuf, destination_filepath: Option<PathBuf>, new_extension: &String) -> Result<PathBuf, RusimgError>;
-}
-```
-
-### Structs
+### Structs and implements
 
 #### struct RusImg
 
@@ -290,6 +245,16 @@ struct ``RusImg`` implements following functions.
 
 ```rust
 impl RusImg {
+    /// Open an image file.
+    /// This function will open an image file and return a RusImg object.
+    /// The image file will be opened based on the file extension.
+    pub fn open(path: &Path) -> Result<Self, RusimgError>;
+
+    /// Create a new image from a DynamicImage object.
+    /// This function will create a new image object based on the file extension.
+    /// It will return a RusImg object.
+    pub fn new(extension: &Extension, image: DynamicImage) -> Result<Self, RusimgError>;
+
     /// Get image size.
     pub fn get_image_size(&self) -> Result<ImgSize, RusimgError>;
 
@@ -407,5 +372,50 @@ impl fmt::Display for Extension {
             Extension::ExternalFormat(s) => write!(f, "{}", s),
         }
     }
+}
+```
+
+### Trait
+
+#### trait BackendTrait
+
+``BackendTrait`` is a trait that contains the image processing functions.
+
+```rust
+pub trait BackendTrait {
+    /// Import an image from a DynamicImage object.
+    fn import(image: DynamicImage, source_path: PathBuf, source_metadata: Metadata) -> Result<Self, RusimgError> where Self: Sized;
+    /// Open an image from a image buffer.
+    /// The ``path`` parameter is the file path of the image, but it is used for copying the file path to the object.
+    /// This returns a RusImg object.
+    fn open(path: PathBuf, image_buf: Vec<u8>, metadata: Metadata) -> Result<Self, RusimgError> where Self: Sized;
+    /// Save the image to a file to the ``path``.
+    fn save(&mut self, path: Option<PathBuf>) -> Result<(), RusimgError>;
+    /// Compress the image with the quality parameter.
+    fn compress(&mut self, quality: Option<f32>) -> Result<(), RusimgError>;
+    /// Resize the image with the resize_ratio parameter.
+    fn resize(&mut self, resize_ratio: u8) -> Result<ImgSize, RusimgError>;
+    /// Trim the image with the trim parameter.
+    /// The trim parameter is a Rect object.
+    fn trim(&mut self, trim: Rect) -> Result<ImgSize, RusimgError>;
+    /// Grayscale the image.
+    fn grayscale(&mut self);
+    /// Set a image::DynamicImage to the image object.
+    /// After setting the image, the image object will be updated.
+    fn set_dynamic_image(&mut self, image: DynamicImage) -> Result<(), RusimgError>;
+    /// Get a image::DynamicImage from the image object.
+    fn get_dynamic_image(&mut self) -> Result<DynamicImage, RusimgError>;
+    /// Get the source file path.
+    fn get_source_filepath(&self) -> PathBuf;
+    /// Get the destination file path.
+    fn get_destination_filepath(&self) -> Option<PathBuf>;
+    /// Get the source metadata.
+    fn get_metadata_src(&self) -> Metadata;
+    /// Get the destination metadata.
+    fn get_metadata_dest(&self) -> Option<Metadata>;
+    /// Get the image size.
+    fn get_size(&self) -> ImgSize;
+    /// Get a file path for saving an image.
+    fn get_save_filepath(&self, source_filepath: &PathBuf, destination_filepath: Option<PathBuf>, new_extension: &String) -> Result<PathBuf, RusimgError>;
 }
 ```
