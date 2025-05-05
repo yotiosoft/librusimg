@@ -243,27 +243,59 @@ pub fn open_image(path: &Path) -> Result<RusImg, RusimgError> {
 pub fn new_image(extension: &Extension, image: DynamicImage) -> Result<RusImg, RusimgError> {
     match extension {
         Extension::Bmp => {
-            let image_object = bmp::BmpImage::import(Some(image), None, None)?;
-            let data = Box::new(image_object);
-            Ok(RusImg { extension: Extension::Bmp, data: data })
+            new_bmp_image(image)
         },
         Extension::Jpeg => {
-            let image_object = jpeg::JpegImage::import(Some(image), None, None)?;
-            let data = Box::new(image_object);
-            Ok(RusImg { extension: Extension::Jpeg, data: data })
+            new_jpeg_image(image)
         },
         Extension::Png => {
-            let image_object = png::PngImage::import(Some(image), None, None)?;
-            let data = Box::new(image_object);
-            Ok(RusImg { extension: Extension::Png, data: data })
+            new_png_image(image)
         },
         Extension::Webp => {
-            let image_object = webp::WebpImage::import(Some(image), None, None)?;
-            let data = Box::new(image_object);
-            Ok(RusImg { extension: Extension::Webp, data: data })
+            new_webp_image(image)
         },
         _ => Err(RusimgError::UnsupportedFileExtension),
     }
+}
+#[cfg(feature="bmp")]
+fn new_bmp_image(image: DynamicImage) -> Result<RusImg, RusimgError> {
+    let image_object = bmp::BmpImage::import(Some(image), None, None)?;
+    let data = Box::new(image_object);
+    Ok(RusImg { extension: Extension::Bmp, data: data })
+}
+#[cfg(not(feature="bmp"))]
+fn new_bmp_image(_image: DynamicImage) -> Result<RusImg, RusimgError> {
+    Err(RusimgError::UnsupportedFileExtension)
+}
+#[cfg(feature="jpeg")]
+fn new_jpeg_image(image: DynamicImage) -> Result<RusImg, RusimgError> {
+    let image_object = jpeg::JpegImage::import(Some(image), None, None)?;
+    let data = Box::new(image_object);
+    Ok(RusImg { extension: Extension::Jpeg, data: data })
+}
+#[cfg(not(feature="jpeg"))]
+fn new_jpeg_image(_image: DynamicImage) -> Result<RusImg, RusimgError> {
+    Err(RusimgError::UnsupportedFileExtension)
+}
+#[cfg(feature="png")]
+fn new_png_image(image: DynamicImage) -> Result<RusImg, RusimgError> {
+    let image_object = png::PngImage::import(Some(image), None, None)?;
+    let data = Box::new(image_object);
+    Ok(RusImg { extension: Extension::Png, data: data })
+}
+#[cfg(not(feature="png"))]
+fn new_png_image(_image: DynamicImage) -> Result<RusImg, RusimgError> {
+    Err(RusimgError::UnsupportedFileExtension)
+}
+#[cfg(feature="webp")]
+fn new_webp_image(image: DynamicImage) -> Result<RusImg, RusimgError> {
+    let image_object = webp::WebpImage::import(Some(image), None, None)?;
+    let data = Box::new(image_object);
+    Ok(RusImg { extension: Extension::Webp, data: data })
+}
+#[cfg(not(feature="webp"))]
+fn new_webp_image(_image: DynamicImage) -> Result<RusImg, RusimgError> {
+    Err(RusimgError::UnsupportedFileExtension)
 }
 
 // Converter interfaces.
