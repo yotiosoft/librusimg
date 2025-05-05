@@ -112,12 +112,14 @@ impl BackendTrait for JpegImage {
         println!("q3");
         let mut compress = Compress::new(ColorSpace::JCS_RGB);
         println!("q4");
+        compress.set_scan_optimization_mode(ScanMode::AllComponentsTogether);
         println!("q5");
         compress.set_size(self.size.width, self.size.height);
         println!("q6");
         compress.set_quality(quality);
         println!("q7");
-        let comp = compress.start_compress(image_bytes).map_err(|e| RusimgError::FailedToCompressImage(Some(e.to_string())))?;
+        let mut comp = compress.start_compress(Vec::new()).map_err(|e| RusimgError::FailedToCompressImage(Some(e.to_string())))?;
+        comp.write_scanlines(&image_bytes).map_err(|e| RusimgError::FailedToCompressImage(Some(e.to_string())))?;
         println!("q8");
         self.image_bytes = Some(comp.finish().map_err(|e| RusimgError::FailedToCompressImage(Some(e.to_string())))?);
         println!("q9"); 
