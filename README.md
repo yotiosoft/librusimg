@@ -234,8 +234,8 @@ struct ``RusImg`` holds the file extension and the image data (``BackendTrait``)
 
 ```rust
 pub struct RusImg {
-    pub extension: Extension,
-    pub data: Box<(dyn BackendTrait)>,
+    extension: Extension,
+    data: Box<(dyn BackendTrait)>,
 }
 ```
 

@@ -13,8 +13,8 @@ pub use extension::*;
 /// RusImg object.
 /// This object contains an image object and its metadata.
 pub struct RusImg {
-    pub extension: Extension,
-    pub data: Box<(dyn BackendTrait)>,
+    extension: Extension,
+    data: Box<(dyn BackendTrait)>,
 }
 
 /// RusImg object implementation.
