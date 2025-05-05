@@ -145,6 +145,13 @@ impl RusImg {
         Ok(dynamic_image)
     }
 
+    /// Remove alpha channel from the image.
+    /// Because JPEG does not support alpha channel, it's necessary to remove it before saving.
+    pub fn remove_alpha_channel(&mut self) -> Result<(), RusimgError> {
+        self.data.remove_alpha_channel()?;
+        Ok(())
+    }
+
     /// Get file extension.
     /// This returns the file extension of the image.
     pub fn get_extension(&self) -> Extension {
@@ -370,8 +377,24 @@ mod tests {
     }
 
     #[test]
-    fn test_get_extension() {
+    fn test_remove_alpha_channel() {
         let filename = "test_image11.png";
+        let width = 100;
+        let height = 100;
+        generate_test_image(filename, width, height);
+        let path = Path::new(filename);
+        let mut img = RusImg::open(path).unwrap();
+        let result = img.remove_alpha_channel();
+        assert!(result.is_ok());
+        // Check if the image has an alpha channel
+        let dynamic_image = img.get_dynamic_image().unwrap();
+        assert_eq!(dynamic_image.color(), image::ColorType::Rgb8);
+        std::fs::remove_file(filename).unwrap();
+    }
+
+    #[test]
+    fn test_get_extension() {
+        let filename = "test_image12.png";
         let width = 100;
         let height = 100;
         generate_test_image(filename, width, height);
@@ -384,7 +407,7 @@ mod tests {
 
     #[test]
     fn test_get_input_filepath() {
-        let filename = "test_image12.png";
+        let filename = "test_image13.png";
         let width = 100;
         let height = 100;
         generate_test_image(filename, width, height);
@@ -397,7 +420,7 @@ mod tests {
 
     #[test]
     fn test_save_image() {
-        let filename = "test_image13.png";
+        let filename = "test_image14.png";
         let width = 100;
         let height = 100;
         generate_test_image(filename, width, height);
@@ -450,7 +473,7 @@ mod tests {
 
     #[test]
     fn test_err_failed_to_save_image() {
-        let filename = "test_image14.png";
+        let filename = "test_image15.png";
         let width = 100;
         let height = 100;
         generate_test_image(filename, width, height);
@@ -473,7 +496,7 @@ mod tests {
 
     #[test]
     fn test_err_invalid_compression_level() {
-        let filename = "test_image15.png";
+        let filename = "test_image16.png";
         let width = 100;
         let height = 100;
         generate_test_image(filename, width, height);
@@ -506,7 +529,7 @@ mod tests {
 
     #[test]
     fn test_err_invalid_trim_xy() {
-        let filename = "test_image16.png";
+        let filename = "test_image17.png";
         let width = 100;
         let height = 100;
         generate_test_image(filename, width, height);
@@ -528,7 +551,7 @@ mod tests {
 
     #[test]
     fn test_err_image_format_cannot_be_compressed() {
-        let filename = "test_image17.bmp";
+        let filename = "test_image18.bmp";
         let width = 100;
         let height = 100;
         generate_test_image(filename, width, height);
@@ -550,7 +573,7 @@ mod tests {
 
     #[test]
     fn test_err_source_path_must_be_specified() {
-        let filename = "test_image18.png";
+        let filename = "test_image19.png";
         let width = 100;
         let height = 100;
         generate_test_image(filename, width, height);
