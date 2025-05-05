@@ -1,4 +1,3 @@
-mod empty;
 #[cfg(feature="bmp")]
 mod bmp;
 #[cfg(feature="jpeg")]
@@ -135,7 +134,7 @@ pub trait BackendTrait {
             if Path::new(&path).is_dir() {
                 let source_filepath = match source_filepath {
                     Some(path) => path,
-                    None => return Err(RusimgError::SourcePathMustBeSpecified),
+                    None => return Err(RusimgError::DestinationPathMustBeSpecified),
                 };
                 let filename = match Path::new(&source_filepath).file_name() {
                     Some(filename) => filename,
@@ -150,7 +149,7 @@ pub trait BackendTrait {
         else {
             let source_filepath = match source_filepath {
                 Some(path) => path,
-                None => return Err(RusimgError::SourcePathMustBeSpecified),
+                None => return Err(RusimgError::DestinationPathMustBeSpecified),
             };
             Ok(Path::new(&source_filepath).with_extension(new_extension))
         }
@@ -240,27 +239,27 @@ pub fn open_image(path: &Path) -> Result<RusImg, RusimgError> {
     }
 }
 
-/// Make a new RusImg object with an empty image.
+/// Make a new RusImg object from a DynamicImage object.
 pub fn new_image(extension: &Extension, image: DynamicImage) -> Result<RusImg, RusimgError> {
     match extension {
         Extension::Bmp => {
-            let empty = bmp::BmpImage::import(Some(image), None, None)?;
-            let data = Box::new(empty);
+            let image_object = bmp::BmpImage::import(Some(image), None, None)?;
+            let data = Box::new(image_object);
             Ok(RusImg { extension: Extension::Bmp, data: data })
         },
         Extension::Jpeg => {
-            let empty = jpeg::JpegImage::import(Some(image), None, None)?;
-            let data = Box::new(empty);
+            let image_object = jpeg::JpegImage::import(Some(image), None, None)?;
+            let data = Box::new(image_object);
             Ok(RusImg { extension: Extension::Jpeg, data: data })
         },
         Extension::Png => {
-            let empty = png::PngImage::import(Some(image), None, None)?;
-            let data = Box::new(empty);
+            let image_object = png::PngImage::import(Some(image), None, None)?;
+            let data = Box::new(image_object);
             Ok(RusImg { extension: Extension::Png, data: data })
         },
         Extension::Webp => {
-            let empty = webp::WebpImage::import(Some(image), None, None)?;
-            let data = Box::new(empty);
+            let image_object = webp::WebpImage::import(Some(image), None, None)?;
+            let data = Box::new(image_object);
             Ok(RusImg { extension: Extension::Webp, data: data })
         },
         _ => Err(RusimgError::UnsupportedFileExtension),

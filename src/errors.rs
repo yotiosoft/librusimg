@@ -25,7 +25,7 @@ pub enum RusimgError {
     UnsupportedFileExtension,
     UnsupportedFeature,
     ImageNotSpecified,
-    SourcePathMustBeSpecified,
+    DestinationPathMustBeSpecified,
 }
 /// Implement Display trait for RusimgError.
 impl fmt::Display for RusimgError {
@@ -57,7 +57,7 @@ impl fmt::Display for RusimgError {
             RusimgError::UnsupportedFileExtension => write!(f, "Unsupported file extension"),
             RusimgError::UnsupportedFeature => write!(f, "Unsupported feature"),
             RusimgError::ImageNotSpecified => write!(f, "Image not specified"),
-            RusimgError::SourcePathMustBeSpecified => write!(f, "Source path must be specified"),
+            RusimgError::DestinationPathMustBeSpecified => write!(f, "Destination path must be specified"),
         }
     }
 }

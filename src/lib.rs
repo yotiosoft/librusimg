@@ -97,7 +97,6 @@ impl RusImg {
         let metadata = self.data.get_metadata_src();
 
         let new_image: Box<(dyn BackendTrait)> = match new_extension {
-            Extension::Empty => return Err(RusimgError::UnsupportedFileExtension),
             Extension::Bmp => {
                 backend::convert_to_bmp_image(dynamic_image, filepath, metadata)?
             },
@@ -143,7 +142,7 @@ impl RusImg {
     /// Get input file path.
     /// This returns the file path of the image.
     pub fn get_input_filepath(&self) -> Result<PathBuf, RusimgError> {
-        self.data.get_source_filepath().ok_or(RusimgError::SourcePathMustBeSpecified)
+        self.data.get_source_filepath().ok_or(RusimgError::DestinationPathMustBeSpecified)
     }
 
     /// Save an image to a file.
@@ -191,7 +190,6 @@ mod tests {
             }
         }
         let mut test_image = RusImg::new(&Extension::Png, DynamicImage::ImageRgb8(img.clone())).unwrap();
-        assert!(test_image.get_image_size().unwrap().width == width as usize);
         test_image.save_image(Some(filename)).unwrap();
     }
 

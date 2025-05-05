@@ -45,13 +45,15 @@ After opening the image, the function will return a ``RusImg`` object.
 pub fn open_image(path: &Path) -> Result<RusImg, RusimgError>;
 ```
 
-### Generate an empty image
+### Generate a new image
 
-Generate an empty image.
+You can create a new image from a ``DynamicImage`` object.
+
 ```rust
-pub fn new_image(path: &Path) -> Result<RusImg, RusimgError>;
+pub fn new_image(extension: &Extension, image: DynamicImage) -> Result<RusImg, RusimgError>;
 ```
-This function generates an empty image with the specified width and height.
+
+For extension, see the [Image Conversion](#image-conversion) section.
 
 ### Image Conversion
 
