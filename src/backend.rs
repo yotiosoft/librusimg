@@ -156,7 +156,6 @@ pub trait BackendTrait {
     }
 
     /// Remove alpha channel from the image.
-    /// Because JPEG does not support alpha channel, it's necessary to remove it before saving.
     fn remove_alpha_channel(&mut self) -> Result<(), RusimgError> {
         if self.get_size()?.width == 0 || self.get_size()?.height == 0 {
             return Err(RusimgError::ImageNotSpecified);
@@ -164,6 +163,16 @@ pub trait BackendTrait {
         if self.get_dynamic_image()?.color() == image::ColorType::Rgba8 {
             let image = self.get_dynamic_image()?;
             let image = image.to_rgb8();
+            self.set_dynamic_image(image.into())?;
+        }
+        if self.get_dynamic_image()?.color() == image::ColorType::Rgba16 {
+            let image = self.get_dynamic_image()?;
+            let image = image.to_rgb16();
+            self.set_dynamic_image(image.into())?;
+        }
+        if self.get_dynamic_image()?.color() == image::ColorType::Rgba32F {
+            let image = self.get_dynamic_image()?;
+            let image = image.to_rgb32f();
             self.set_dynamic_image(image.into())?;
         }
         Ok(())

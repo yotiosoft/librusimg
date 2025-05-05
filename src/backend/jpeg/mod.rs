@@ -67,6 +67,17 @@ impl BackendTrait for JpegImage {
     fn save(&mut self, path: Option<PathBuf>) -> Result<(), RusimgError> {
         let save_path = Self::get_save_filepath(&self, &self.filepath_input, path, &self.extension_str)?;
         
+        // Remove alpha channel if it exists because JPEG does not support it
+        if self.image.color() == image::ColorType::Rgba8 {
+            self.image = DynamicImage::ImageRgb8(self.image.to_rgb8());
+        }
+        if self.image.color() == image::ColorType::Rgba16 {
+            self.image = DynamicImage::ImageRgb16(self.image.to_rgb16());
+        }
+        if self.image.color() == image::ColorType::Rgba32F {
+            self.image = DynamicImage::ImageRgb32F(self.image.to_rgb32f());
+        }
+
         // image_bytes == None の場合、DynamicImage を 保存
         if self.image_bytes.is_none() {
             self.image.to_rgba8().save(&save_path).map_err(|e| RusimgError::FailedToSaveImage(e.to_string()))?;
