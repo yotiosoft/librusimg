@@ -146,6 +146,7 @@ $ rusimg -i <input_file> -o <output_file_or_directory> -c <format_to_convert> -q
 
 With implementing the ``BackendTrait`` trait, you can add a new image format backend to librusimg that is not currently supported.  
 ``Extension::ExternalFormat(String)`` is provided for the library crate users to use if they wish to implement their own alternate image file format.
+Use the ``rusimg::RusImg.assemble()`` function to create a new RusImg object from the external format.
 
 Example: Implementing ``my_bmp`` that implements ``bmp`` format myself.
 ```rust
@@ -163,11 +164,11 @@ pub fn open_my_bmp(path: &Path) -> Result<RusImg, RusimgError> {
     raw_data.read_to_end(&mut buf).map_err(|e| RusimgError::FailedToReadFile(e.to_string()))?;
     let metadata_input = raw_data.metadata().map_err(|e| RusimgError::FailedToGetMetadata(e.to_string()))?;
 
-    let mybmpimg = my_bmp::MyBmpImage::open(path.to_path_buf(), buf, metadata_input)?;
-    Ok(RusImg {
-        extension: Extension::ExternalFormat("my_bmp".to_string()),
-        data: Box::new(mybmpimg),
-    })
+    let bmp2img = bmp2::Bmp2Image::open(Some(path.to_path_buf()), Some(buf), Some(metadata_input))?;
+    RusImg::assemble(
+        &Extension::ExternalFormat("my_bmp".to_string()),
+        Box::new(bmp2img),
+    )
 }
 
 fn main() {
@@ -179,7 +180,7 @@ fn main() {
     match my_img {
         Ok(mut my_img) => {
             my_img.resize(200).map_err(|e| println!("{}", e)).unwrap();
-            my_img.save_image(Some("test_save2.bmp")).map_err(|e| println!("{}", e)).unwrap();         
+            my_img.save_image(Some("test_save2.my.bmp")).map_err(|e| println!("{}", e)).unwrap();         
         }
         Err(e) => println!("{}", e),
     }
@@ -207,11 +208,11 @@ pub struct MyBmpImage {
 }
 
 impl BackendTrait for MyBmpImage {
-    fn import(image: DynamicImage, source_path: PathBuf, source_metadata: Metadata) -> Result<Self, RusimgError> {
+    fn import(image: Option<DynamicImage>, source_path: Option<PathBuf>, source_metadata: Option<Metadata>) -> Result<Self, RusimgError> {
         // create MyBmpImage object
         ...
     }
-    fn open(path: PathBuf, image_buf: Vec<u8>, metadata: Metadata) -> Result<Self, RusimgError> {
+    fn open(path: Option<PathBuf>, image_buf: Option<Vec<u8>>, metadata: Option<Metadata>) -> Result<Self, RusimgError> {
         // open the image and create MyBmpImage object
         ...
     }
