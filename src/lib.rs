@@ -115,6 +115,9 @@ impl RusImg {
             Extension::Jpeg => {
                 backend::convert_to_jpeg_image(dynamic_image, filepath, metadata)?
             },
+            Extension::Jpg => {
+                backend::convert_to_jpeg_image(dynamic_image, filepath, metadata)?
+            },
             Extension::Png => {
                 backend::convert_to_png_image(dynamic_image, filepath, metadata)?
             },
@@ -330,21 +333,21 @@ mod tests {
         let result = img.convert(&Extension::Webp);
         assert!(result.is_ok());
         // file types
-        let extensions = vec!["bmp", "jpg", "webp"];
-        for ext in extensions {
-            let new_filename = filename.replace(".png", &format!(".{}", ext));
+        let rusimg_extensions = vec![Extension::Bmp, Extension::Jpeg, Extension::Jpg, Extension::Png, Extension::Webp];
+        let image_extensions = vec![image::ImageFormat::Bmp, image::ImageFormat::Jpeg, image::ImageFormat::Jpeg, image::ImageFormat::Png, image::ImageFormat::WebP];
+        for (ext, image_ext) in rusimg_extensions.iter().zip(image_extensions.iter()) {
+            // Convert the image to the new format.
+            let new_filename = filename.replace(".png", &format!("_output.{}", ext));
             let new_path = Path::new(&new_filename);
-            if new_path.exists() {
-                assert!(Path::new(&new_filename).exists());
-                // Can I open the new image?
-                let mut new_img = RusImg::open(new_path).unwrap();
-                let dynamic_new_img = new_img.get_dynamic_image().unwrap();
-                assert_eq!(dynamic_new_img.width(), 100);
-                assert_eq!(dynamic_new_img.height(), 100);
-                assert_eq!(new_img.extension.to_string(), ext);
-                // Clean up the new image file
-                std::fs::remove_file(new_filename).unwrap();
-            }
+            let mut image_cloned = RusImg::open(&PathBuf::from(filename)).unwrap();
+            image_cloned.convert(&ext).unwrap();
+            image_cloned.save_image(new_path.to_str()).unwrap();
+            // Check if the file extension is correct.
+            let output_image_binary = std::fs::read(new_path).unwrap();
+            let guessed_format = image::guess_format(&output_image_binary).unwrap();
+            assert_eq!(guessed_format, *image_ext);
+            // Clean up the test image file.
+            std::fs::remove_file(new_path).unwrap();
         }
         std::fs::remove_file(filename).unwrap();
     }

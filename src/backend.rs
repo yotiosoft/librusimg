@@ -271,6 +271,9 @@ pub fn new_image(extension: &Extension, image: DynamicImage) -> Result<RusImg, R
         Extension::Jpeg => {
             new_jpeg_image(image)
         },
+        Extension::Jpg => {
+            new_jpeg_image(image)
+        },
         Extension::Png => {
             new_png_image(image)
         },
@@ -294,7 +297,7 @@ fn new_bmp_image(_image: DynamicImage) -> Result<RusImg, RusimgError> {
 fn new_jpeg_image(image: DynamicImage) -> Result<RusImg, RusimgError> {
     let image_object = jpeg::JpegImage::import(Some(image), None, None)?;
     let data = Box::new(image_object);
-    Ok(RusImg { extension: Extension::Jpeg, data: data })
+    Ok(RusImg { extension: Extension::Jpg, data: data })
 }
 #[cfg(not(feature="jpeg"))]
 fn new_jpeg_image(_image: DynamicImage) -> Result<RusImg, RusimgError> {

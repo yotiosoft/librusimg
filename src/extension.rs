@@ -6,6 +6,7 @@ use std::fmt;
 #[derive(Debug, Clone, PartialEq)]
 pub enum Extension {
     Bmp,
+    Jpg,
     Jpeg,
     Png,
     Webp,
@@ -15,6 +16,7 @@ impl fmt::Display for Extension {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Extension::Bmp => write!(f, "bmp"),
+            Extension::Jpg => write!(f, "jpg"),
             Extension::Jpeg => write!(f, "jpeg"),
             Extension::Png => write!(f, "png"),
             Extension::Webp => write!(f, "webp"),
