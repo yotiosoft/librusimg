@@ -106,17 +106,16 @@ impl BackendTrait for JpegImage {
     /// quality: Option<f32> 0.0 - 100.0
     fn compress(&mut self, quality: Option<f32>) -> Result<(), RusimgError> {
         let quality = quality.unwrap_or(75.0);  // default quality: 75.0
+
         let image_bytes = self.image.clone().into_bytes();
+
         let mut compress = Compress::new(ColorSpace::JCS_RGB);
         compress.set_scan_optimization_mode(ScanMode::AllComponentsTogether);
         compress.set_size(self.size.width, self.size.height);
-        compress.set_mem_dest();
         compress.set_quality(quality);
-        compress.start_compress();
-        compress.write_scanlines(&image_bytes);
-        compress.finish_compress();
+        let comp = compress.start_compress(image_bytes).map_err(|e| RusimgError::FailedToCompressImage(Some(e.to_string())))?;
 
-        self.image_bytes = Some(compress.data_to_vec().map_err(|_| RusimgError::FailedToCompressImage(None))?);
+        self.image_bytes = Some(comp.finish().map_err(|e| RusimgError::FailedToCompressImage(Some(e.to_string())))?);
 
         self.operations_count += 1;
 
