@@ -9,7 +9,7 @@ This library was developed for the [Rusimg](https://github.com/yotiosoft/rusimg)
 Use ``cargo`` to add the library crate.
 
 ```bash
-$ cargo add rusimg
+$ cargo add librusimg
 ```
 
 Or, add this to your project's ``Cargo.toml``.
