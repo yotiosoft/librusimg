@@ -255,6 +255,11 @@ impl RusImg {
     /// It will return a RusImg object.
     pub fn new(extension: &Extension, image: DynamicImage) -> Result<Self, RusimgError>;
 
+    /// Create a new RusImg object from an Extension and a BaclendTrait object.
+    /// This function is for external formats.
+    /// It will return a RusImg object.
+    pub fn assemble(extension: &Extension, data: Box<(dyn BackendTrait)>) -> Result<Self, RusimgError>;
+
     /// Get image size.
     pub fn get_image_size(&self) -> Result<ImgSize, RusimgError>;
 

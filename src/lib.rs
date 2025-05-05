@@ -34,6 +34,18 @@ impl RusImg {
         backend::new_image(extension, image)
     }
 
+    /// Create a new RusImg object from an Extension and a BaclendTrait object.
+    /// This function is for external formats.
+    /// It will return a RusImg object.
+    pub fn assemble(extension: &Extension, data: Box<(dyn BackendTrait)>) -> Result<Self, RusimgError> {
+        let mut new_img = RusImg {
+            extension: extension.clone(),
+            data,
+        };
+        new_img.extension = extension.clone();
+        Ok(new_img)
+    }
+
     /// Get image size.
     /// This uses the ``get_size()`` function from ``BackendTrait``.
     pub fn get_image_size(&self) -> Result<ImgSize, RusimgError> {
