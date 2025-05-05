@@ -88,6 +88,7 @@ impl BackendTrait for JpegImage {
         if let Some(quality) = self.required_quality {
             let encoder = Encoder::new_file(&save_path, quality as u8).map_err(|e| RusimgError::FailedToCreateFile(e.to_string()))?;
             encoder.encode(&self.image.to_rgb8(), self.size.width as u16, self.size.height as u16, ColorType::Rgb).map_err(|e| RusimgError::FailedToSaveImage(e.to_string()))?;
+            self.metadata_output = Some(std::fs::metadata(&save_path).map_err(|e| RusimgError::FailedToGetMetadata(e.to_string()))?);
         }
         // If compression is not specified, save normally
         else {
