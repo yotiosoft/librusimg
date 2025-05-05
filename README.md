@@ -195,7 +195,7 @@ use image::DynamicImage;
 use std::fs::Metadata;
 use std::path::PathBuf;
 
-use rusimg::{ImgSize, RusimgError, BackendTrait};
+use librusimg::{ImgSize, RusimgError, BackendTrait};
 
 #[derive(Debug, Clone)]
 pub struct MyBmpImage {
@@ -207,7 +207,7 @@ pub struct MyBmpImage {
     pub filepath_output: Option<PathBuf>,
 }
 
-impl BackendTrait for MyBmpImage {
+impl BackendTrait for Bmp2Image {
     fn import(image: Option<DynamicImage>, source_path: Option<PathBuf>, source_metadata: Option<Metadata>) -> Result<Self, RusimgError> {
         // create MyBmpImage object
         ...
