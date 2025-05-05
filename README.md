@@ -164,10 +164,10 @@ pub fn open_my_bmp(path: &Path) -> Result<RusImg, RusimgError> {
     raw_data.read_to_end(&mut buf).map_err(|e| RusimgError::FailedToReadFile(e.to_string()))?;
     let metadata_input = raw_data.metadata().map_err(|e| RusimgError::FailedToGetMetadata(e.to_string()))?;
 
-    let bmp2img = bmp2::Bmp2Image::open(Some(path.to_path_buf()), Some(buf), Some(metadata_input))?;
+    let my_bmp_img = my_bmp::MyBmpImage::open(Some(path.to_path_buf()), Some(buf), Some(metadata_input))?;
     RusImg::assemble(
         &Extension::ExternalFormat("my_bmp".to_string()),
-        Box::new(bmp2img),
+        Box::new(my_bmp_img),
     )
 }
 
@@ -207,7 +207,7 @@ pub struct MyBmpImage {
     pub filepath_output: Option<PathBuf>,
 }
 
-impl BackendTrait for Bmp2Image {
+impl BackendTrait for MyBmpImage {
     fn import(image: Option<DynamicImage>, source_path: Option<PathBuf>, source_metadata: Option<Metadata>) -> Result<Self, RusimgError> {
         // create MyBmpImage object
         ...
