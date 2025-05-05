@@ -112,7 +112,6 @@ impl BackendTrait for JpegImage {
         println!("q3");
         let mut compress = Compress::new(ColorSpace::JCS_RGB);
         println!("q4");
-        compress.set_scan_optimization_mode(ScanMode::AllComponentsTogether);
         println!("q5");
         compress.set_size(self.size.width, self.size.height);
         println!("q6");
