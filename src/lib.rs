@@ -30,8 +30,8 @@ impl RusImg {
     /// New image object.
     /// This function will create a new image object based on the file extension.
     /// It will return a RusImg object.
-    pub fn new(path: &Path) -> Result<Self, RusimgError> {
-        backend::new_image(path)
+    pub fn new(extension: &Extension, image: DynamicImage) -> Result<Self, RusimgError> {
+        backend::new_image(extension, image)
     }
 
     /// Get image size.
@@ -190,11 +190,8 @@ mod tests {
                 img.put_pixel(x, y, Rgb([r, g, b]));
             }
         }
-        let mut test_image = RusImg::new(Path::new(filename)).unwrap();
-        test_image.data.set_dynamic_image(DynamicImage::ImageRgb8(img)).unwrap();
-        let new_extension = Extension::Png;
+        let mut test_image = RusImg::new(&Extension::Png, DynamicImage::ImageRgb8(img.clone())).unwrap();
         assert!(test_image.get_image_size().unwrap().width == width as usize);
-        test_image.convert(&new_extension).unwrap();
         test_image.save_image(Some(filename)).unwrap();
     }
 
@@ -444,8 +441,6 @@ mod tests {
     #[test]
     fn test_err_failed_to_save_image() {
         let filename = "test_image14.png";
-        let path = Path::new(filename);
-        _ = RusImg::new(path);
         let width = 100;
         let height = 100;
         generate_test_image(filename, width, height);

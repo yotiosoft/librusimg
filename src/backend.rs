@@ -163,11 +163,6 @@ fn guess_image_format(image_buf: &[u8]) -> Result<image::ImageFormat, RusimgErro
     Ok(format)
 }
 
-fn new_empty_image(path: PathBuf) -> Result<RusImg, RusimgError> {
-    let empty = empty::EmptyImage::import(None, Some(path), None)?;
-    let data = Box::new(empty);
-    Ok(RusImg { extension: Extension::Empty, data: data })
-}
 /// Open a bmp image file and make a RusImg object.
 /// If the bmp feature is enabled, it will open a BMP image.
 /// If not, it will return an UnsupportedFileExtension error.
@@ -245,9 +240,31 @@ pub fn open_image(path: &Path) -> Result<RusImg, RusimgError> {
     }
 }
 
-/// Open but not read because the file is not exist.
-pub fn new_image(path: &Path) -> Result<RusImg, RusimgError> {
-    new_empty_image(path.to_path_buf())
+/// Make a new RusImg object with an empty image.
+pub fn new_image(extension: &Extension, image: DynamicImage) -> Result<RusImg, RusimgError> {
+    match extension {
+        Extension::Bmp => {
+            let empty = bmp::BmpImage::import(Some(image), None, None)?;
+            let data = Box::new(empty);
+            Ok(RusImg { extension: Extension::Bmp, data: data })
+        },
+        Extension::Jpeg => {
+            let empty = jpeg::JpegImage::import(Some(image), None, None)?;
+            let data = Box::new(empty);
+            Ok(RusImg { extension: Extension::Jpeg, data: data })
+        },
+        Extension::Png => {
+            let empty = png::PngImage::import(Some(image), None, None)?;
+            let data = Box::new(empty);
+            Ok(RusImg { extension: Extension::Png, data: data })
+        },
+        Extension::Webp => {
+            let empty = webp::WebpImage::import(Some(image), None, None)?;
+            let data = Box::new(empty);
+            Ok(RusImg { extension: Extension::Webp, data: data })
+        },
+        _ => Err(RusimgError::UnsupportedFileExtension),
+    }
 }
 
 // Converter interfaces.
