@@ -37,7 +37,7 @@ rusimg = { version = "0.1.0", default-features = false, features = ["bmp", "jpeg
 - Grayscale Conversion
 - Save the image
 
-### Open An Image
+### Open an image
 
 After opening the image, the function will return a ``RusImg`` object.
 
@@ -53,7 +53,7 @@ You can create a new image from a ``DynamicImage`` object.
 pub fn new_image(extension: &Extension, image: DynamicImage) -> Result<RusImg, RusimgError>;
 ```
 
-For extension, see the [Image Conversion](#image-conversion) section.
+See the [Image Conversion](#image-conversion) section for the supported extensions.
 
 ### Image Conversion
 
@@ -139,7 +139,7 @@ $ cargo install rusimg
 Then, you can run the following command to convert an image.
 
 ```bash
-$ rusimg -i <input_file> -o <output_file> -f <output_format> -q <quality> -r <resize_ratio> -t <trim_x,trim_y,trim_w,trim_h> -g
+$ rusimg -i <input_file> -o <output_file_or_directory> -c <format_to_convert> -q <quality> -r <resize_ratio>
 ```
 
 ## Add new image type & backend yourself
