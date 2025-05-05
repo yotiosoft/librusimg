@@ -37,13 +37,21 @@ rusimg = { version = "0.1.0", default-features = false, features = ["bmp", "jpeg
 - Grayscale Conversion
 - Save the image
 
-### Open Image
+### Open An Image
 
 After opening the image, the function will return a ``RusImg`` object.
 
 ```rust
 pub fn open_image(path: &Path) -> Result<RusImg, RusimgError>;
 ```
+
+### Generate an empty image
+
+Generate an empty image.
+```rust
+pub fn new_image(path: &Path) -> Result<RusImg, RusimgError>;
+```
+This function generates an empty image with the specified width and height.
 
 ### Image Conversion
 
