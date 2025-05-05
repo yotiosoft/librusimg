@@ -20,11 +20,27 @@ pub struct JpegImage {
     pub filepath_output: Option<PathBuf>,
 }
 
+fn remove_alpha_channel(image: DynamicImage) -> DynamicImage {
+    // Remove alpha channel if it exists because JPEG does not support it
+    if image.color() == image::ColorType::Rgba8 {
+        return DynamicImage::ImageRgb8(image.to_rgb8());
+    }
+    if image.color() == image::ColorType::Rgba16 {
+        return DynamicImage::ImageRgb16(image.to_rgb16());
+    }
+    if image.color() == image::ColorType::Rgba32F {
+        return DynamicImage::ImageRgb32F(image.to_rgb32f());
+    }
+    image
+}
+
 impl BackendTrait for JpegImage {
     /// Import an image from a DynamicImage object.
     fn import(image: Option<DynamicImage>, source_path: Option<PathBuf>, source_metadata: Option<Metadata>) -> Result<Self, RusimgError> {
         let image = image.ok_or(RusimgError::ImageNotSpecified)?;
         let size = ImgSize { width: image.width() as usize, height: image.height() as usize };
+
+        let image = remove_alpha_channel(image); // Remove alpha channel if it exists because JPEG does not support it
 
         Ok(Self {
             image,
@@ -50,6 +66,8 @@ impl BackendTrait for JpegImage {
 
         let extension_str = path.extension().and_then(|s| s.to_str()).unwrap_or("").to_string();
 
+        let image = remove_alpha_channel(image); // Remove alpha channel if it exists because JPEG does not support it
+        
         Ok(Self {
             image,
             image_bytes: None,
@@ -66,17 +84,6 @@ impl BackendTrait for JpegImage {
     /// Save the image to a file.
     fn save(&mut self, path: Option<PathBuf>) -> Result<(), RusimgError> {
         let save_path = Self::get_save_filepath(&self, &self.filepath_input, path, &self.extension_str)?;
-        
-        // Remove alpha channel if it exists because JPEG does not support it
-        if self.image.color() == image::ColorType::Rgba8 {
-            self.image = DynamicImage::ImageRgb8(self.image.to_rgb8());
-        }
-        if self.image.color() == image::ColorType::Rgba16 {
-            self.image = DynamicImage::ImageRgb16(self.image.to_rgb16());
-        }
-        if self.image.color() == image::ColorType::Rgba32F {
-            self.image = DynamicImage::ImageRgb32F(self.image.to_rgb32f());
-        }
 
         // image_bytes == None の場合、DynamicImage を 保存
         if self.image_bytes.is_none() {
@@ -162,6 +169,7 @@ impl BackendTrait for JpegImage {
 
     /// Set the image to a DynamicImage object.
     fn set_dynamic_image(&mut self, image: DynamicImage) -> Result<(), RusimgError> {
+        let image = remove_alpha_channel(image); // Remove alpha channel if it exists because JPEG does not support it
         self.image = image;
         Ok(())
     }
