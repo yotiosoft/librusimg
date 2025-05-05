@@ -1,8 +1,7 @@
-use mozjpeg::{Compress, ColorSpace, ScanMode};
+use jpeg_encoder::{Encoder, ColorType};
 use image::DynamicImage;
 
 use std::fs::Metadata;
-use std::io::Write;
 use std::path::PathBuf;
 
 use super::super::{BackendTrait, RusimgError, ImgSize, Rect};
@@ -10,10 +9,10 @@ use super::super::{BackendTrait, RusimgError, ImgSize, Rect};
 #[derive(Debug, Clone)]
 pub struct JpegImage {
     pub image: DynamicImage,
-    image_bytes: Option<Vec<u8>>,
     size: ImgSize,
     operations_count: u32,
     extension_str: String,
+    required_quality: Option<f32>,
     pub metadata_input: Option<Metadata>,
     pub metadata_output: Option<Metadata>,
     pub filepath_input: Option<PathBuf>,
@@ -44,10 +43,10 @@ impl BackendTrait for JpegImage {
 
         Ok(Self {
             image,
-            image_bytes: None,
             size,
             operations_count: 0,
             extension_str: "jpg".to_string(),
+            required_quality: None,
             metadata_input: source_metadata,
             metadata_output: None,
             filepath_input: source_path,
@@ -70,10 +69,10 @@ impl BackendTrait for JpegImage {
         
         Ok(Self {
             image,
-            image_bytes: None,
             size,
             operations_count: 0,
             extension_str,
+            required_quality: None,
             metadata_input: Some(metadata),
             metadata_output: None,
             filepath_input: Some(path),
@@ -85,16 +84,15 @@ impl BackendTrait for JpegImage {
     fn save(&mut self, path: Option<PathBuf>) -> Result<(), RusimgError> {
         let save_path = Self::get_save_filepath(&self, &self.filepath_input, path, &self.extension_str)?;
 
-        // image_bytes == None の場合、DynamicImage を 保存
-        if self.image_bytes.is_none() {
+        // If compression is specified, save with compression (using jpeg_encoder crate)
+        if let Some(quality) = self.required_quality {
+            let encoder = Encoder::new_file(&save_path, quality as u8).map_err(|e| RusimgError::FailedToCreateFile(e.to_string()))?;
+            encoder.encode(&self.image.to_rgb8(), self.size.width as u16, self.size.height as u16, ColorType::Rgb).map_err(|e| RusimgError::FailedToSaveImage(e.to_string()))?;
+        }
+        // If compression is not specified, save normally
+        else {
             self.image.save(&save_path).map_err(|e| RusimgError::FailedToSaveImage(e.to_string()))?;
             self.metadata_output = Some(std::fs::metadata(&save_path).map_err(|e| RusimgError::FailedToGetMetadata(e.to_string()))?);
-        }
-        // image_bytes != None の場合、mozjpeg::Compress で圧縮したバイナリデータを保存
-        else {
-            let mut file = std::fs::File::create(&save_path).map_err(|e| RusimgError::FailedToCreateFile(e.to_string()))?;
-            file.write_all(&self.image_bytes.as_ref().unwrap()).map_err(|e| RusimgError::FailedToWriteFIle(e.to_string()))?;
-            self.metadata_output = Some(file.metadata().map_err(|e| RusimgError::FailedToGetMetadata(e.to_string()))?);
         }
 
         self.filepath_output = Some(save_path);
@@ -104,21 +102,12 @@ impl BackendTrait for JpegImage {
 
     /// Compress the image.
     /// quality: Option<f32> 0.0 - 100.0
+    /// Because the jpeg_encoder crate compresses the image when saving it, the compress() method does not need to do anything.
+    /// So this method only sets the quality value.
     fn compress(&mut self, quality: Option<f32>) -> Result<(), RusimgError> {
         let quality = quality.unwrap_or(75.0);  // default quality: 75.0
-
-        let image_bytes = self.image.clone().into_bytes();
-
-        let mut compress = Compress::new(ColorSpace::JCS_RGB);
-        compress.set_scan_optimization_mode(ScanMode::AllComponentsTogether);
-        compress.set_size(self.size.width, self.size.height);
-        compress.set_quality(quality);
-        let comp = compress.start_compress(image_bytes).map_err(|e| RusimgError::FailedToCompressImage(Some(e.to_string())))?;
-
-        self.image_bytes = Some(comp.finish().map_err(|e| RusimgError::FailedToCompressImage(Some(e.to_string())))?);
-
+        self.required_quality = Some(quality);
         self.operations_count += 1;
-
         Ok(())
     }
 
