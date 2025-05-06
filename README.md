@@ -5,7 +5,7 @@
 
 An integrated image processing, conversion, and compression library for BMP, JPEG, PNG, and WebP formats for Rust.
 
-This library was developed for the [Rusimg](https://github.com/yotiosoft/rusimg) project, but it is open for use in other projects as well.
+This library was developed for the [Rusimg](https://crates.io/crates/rusimg) project, but it is open for use in other projects as well.
 
 ## Install
 
@@ -19,7 +19,7 @@ Or, add this to your project's ``Cargo.toml``.
 
 ```toml
 [dependencies]
-librusimg = "0.1.0"
+librusimg = "0.1.1"
 ```
 
 If you don't use the specified image format, you can remove it from the features.  
@@ -27,7 +27,7 @@ For example, if you don't use the webp format, leave ``webp`` out of the feature
 
 ```toml
 [dependencies]
-librusimg = { version = "0.1.0", default-features = false, features = ["bmp", "jpeg", "png"] }
+librusimg = { version = "0.1.1", default-features = false, features = ["bmp", "jpeg", "png"] }
 ```
 
 ## Features
@@ -136,7 +136,7 @@ pub fn save_image(&mut self, path: Option<&str>) -> Result<SaveStatus, RusimgErr
 
 ## Want to try it out?
 
-[rusimg](https://github.com/yotiosoft/rusimg) is a command line tool that uses this library.
+[rusimg](https://crates.io/crates/rusimg) is a command line tool that uses this library.
 You can try it out by running the following command.
 
 ```bash

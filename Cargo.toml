@@ -1,6 +1,6 @@
 [package]
 name = "librusimg"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["yotio <yotio@yotiosoft.com>"]
 description = "A unified image processing library with a consistent API for BMP, JPEG, PNG, and WebP. Originally developed for my project Rusimg, but fully usable as a standalone crate."
 license = "MIT OR Apache-2.0"
