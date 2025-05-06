@@ -152,13 +152,6 @@ impl RusImg {
         Ok(dynamic_image)
     }
 
-    /// Remove alpha channel from the image.
-    /// Because JPEG does not support alpha channel, it's necessary to remove it before saving.
-    pub fn remove_alpha_channel(&mut self) -> Result<(), RusimgError> {
-        self.data.remove_alpha_channel()?;
-        Ok(())
-    }
-
     /// Get file extension.
     /// This returns the file extension of the image.
     pub fn get_extension(&self) -> Extension {
@@ -328,32 +321,40 @@ mod tests {
 
     #[test]
     fn test_convert_image() {
-        let filename = "test_image8.png";
-        let width = 100;
-        let height = 100;
-        generate_test_image(filename, width, height);
-        let path = Path::new(filename);
-        let mut img = RusImg::open(path).unwrap();
-        let result = img.convert(&Extension::Webp);
-        assert!(result.is_ok());
-        // file types
-        let rusimg_extensions = vec![Extension::Bmp, Extension::Jpeg, Extension::Jpg, Extension::Png, Extension::Webp];
-        let image_extensions = vec![image::ImageFormat::Bmp, image::ImageFormat::Jpeg, image::ImageFormat::Jpeg, image::ImageFormat::Png, image::ImageFormat::WebP];
-        for (ext, image_ext) in rusimg_extensions.iter().zip(image_extensions.iter()) {
-            // Convert the image to the new format.
-            let new_filename = filename.replace(".png", &format!("_output.{}", ext));
-            let new_path = Path::new(&new_filename);
-            let mut image_cloned = RusImg::open(&PathBuf::from(filename)).unwrap();
-            image_cloned.convert(&ext).unwrap();
-            image_cloned.save_image(new_path.to_str()).unwrap();
-            // Check if the file extension is correct.
-            let output_image_binary = std::fs::read(new_path).unwrap();
-            let guessed_format = image::guess_format(&output_image_binary).unwrap();
-            assert_eq!(guessed_format, *image_ext);
-            // Clean up the test image file.
-            std::fs::remove_file(new_path).unwrap();
+        let file_names = vec![
+            "test_image8.bmp",
+            "test_image8.jpeg",
+            "test_image8.jpg",
+            "test_image8.png",
+            "test_image8.webp",
+        ];
+        for filename in &file_names {
+            let width = 100;
+            let height = 100;
+            generate_test_image(filename, width, height);
+            let path = Path::new(filename);
+            let mut img = RusImg::open(path).unwrap();
+            let result = img.convert(&Extension::Webp);
+            assert!(result.is_ok());
+            // file types
+            let rusimg_extensions = vec![Extension::Bmp, Extension::Jpeg, Extension::Jpg, Extension::Png, Extension::Webp];
+            let image_extensions = vec![image::ImageFormat::Bmp, image::ImageFormat::Jpeg, image::ImageFormat::Jpeg, image::ImageFormat::Png, image::ImageFormat::WebP];
+            for (ext, image_ext) in rusimg_extensions.iter().zip(image_extensions.iter()) {
+                // Convert the image to the new format.
+                let new_filename = filename.replace(format!(".{}", filename.split('.').last().unwrap()).as_str(), format!("_output.{}", ext.to_string()).as_str());
+                let new_path = Path::new(&new_filename);
+                let mut image_cloned = RusImg::open(&PathBuf::from(filename)).unwrap();
+                image_cloned.convert(&ext).unwrap();
+                image_cloned.save_image(new_path.to_str()).unwrap();
+                // Check if the file extension is correct.
+                let output_image_binary = std::fs::read(new_path).unwrap();
+                let guessed_format = image::guess_format(&output_image_binary).unwrap();
+                assert_eq!(guessed_format, *image_ext);
+                // Clean up the test image file.
+                std::fs::remove_file(new_path).unwrap();
+            }
+            std::fs::remove_file(filename).unwrap();
         }
-        std::fs::remove_file(filename).unwrap();
     }
 
     #[test]
@@ -380,22 +381,6 @@ mod tests {
         let mut img = RusImg::open(path).unwrap();
         let result = img.get_dynamic_image();
         assert!(result.is_ok());
-        std::fs::remove_file(filename).unwrap();
-    }
-
-    #[test]
-    fn test_remove_alpha_channel() {
-        let filename = "test_image11.png";
-        let width = 100;
-        let height = 100;
-        generate_test_image(filename, width, height);
-        let path = Path::new(filename);
-        let mut img = RusImg::open(path).unwrap();
-        let result = img.remove_alpha_channel();
-        assert!(result.is_ok());
-        // Check if the image has an alpha channel
-        let dynamic_image = img.get_dynamic_image().unwrap();
-        assert_eq!(dynamic_image.color(), image::ColorType::Rgb8);
         std::fs::remove_file(filename).unwrap();
     }
 
