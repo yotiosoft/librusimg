@@ -44,7 +44,7 @@ librusimg = { version = "0.1.0", default-features = false, features = ["bmp", "j
 After opening the image, the function will return a ``RusImg`` object.
 
 ```rust
-pub fn open_image(path: &Path) -> Result<RusImg, RusimgError>;
+pub fn open(path: &Path) -> Result<RusImg, RusimgError>;
 ```
 
 ### Generate a new image
@@ -52,7 +52,7 @@ pub fn open_image(path: &Path) -> Result<RusImg, RusimgError>;
 You can create a new image from a ``DynamicImage`` object.
 
 ```rust
-pub fn new_image(extension: &Extension, image: DynamicImage) -> Result<RusImg, RusimgError>;
+pub fn new(extension: &Extension, image: DynamicImage) -> Result<RusImg, RusimgError>;
 ```
 
 See the [Image Conversion](#image-conversion) section for the supported extensions.
@@ -100,7 +100,7 @@ Resize images.
 The resize ratio can be specified by calling the ``rusimg::RusImg.resize()`` function.
 
 ```rust
-pub fn resize(&mut self, resize_ratio: u8) -> Result<ImgSize, RusimgError>;
+pub fn resize(&mut self, ratio: f32) -> Result<ImgSize, RusimgError>;
 ```
 
 ### Image Cropping
@@ -110,7 +110,8 @@ Crop images.
 The crop size can be specified by calling the ``rusimg::RusImg.trim()`` or ``rusimg::RusImg.trim_rect()`` function.
 
 ```rust
-pub fn trim(&mut self, trim: Rect) -> Result<ImgSize, RusimgError>;
+pub fn trim(&mut self, trim_x: u32, trim_y: u32, trim_w: u32, trim_h: u32) -> Result<ImgSize, RusimgError>;
+pub fn trim_rect(&mut self, trim_area: Rect) -> Result<ImgSize, RusimgError>;
 ```
 
 ### Grayscale Conversion
@@ -120,7 +121,7 @@ Convert images to grayscale.
 The grayscale conversion can be specified by calling the ``rusimg::RusImg.grayscale()`` function.
 
 ```rust
-pub fn grayscale(&mut self);
+pub fn grayscale(&mut self) -> Result<(), RusimgError>;
 ```
 
 ### Save the image
