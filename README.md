@@ -44,7 +44,7 @@ librusimg = { version = "0.1.0", default-features = false, features = ["bmp", "j
 After opening the image, the function will return a ``RusImg`` object.
 
 ```rust
-pub fn open_image(path: &Path) -> Result<RusImg, RusimgError>;
+pub fn open(path: &Path) -> Result<RusImg, RusimgError>;
 ```
 
 ### Generate a new image
@@ -52,7 +52,7 @@ pub fn open_image(path: &Path) -> Result<RusImg, RusimgError>;
 You can create a new image from a ``DynamicImage`` object.
 
 ```rust
-pub fn new_image(extension: &Extension, image: DynamicImage) -> Result<RusImg, RusimgError>;
+pub fn new(extension: &Extension, image: DynamicImage) -> Result<RusImg, RusimgError>;
 ```
 
 See the [Image Conversion](#image-conversion) section for the supported extensions.
@@ -67,12 +67,14 @@ The conversion format can be specified by calling the ``rusimg::RusImg.convert()
 pub fn convert(&mut self, new_extension: &Extension) -> Result<(), RusimgError>;
 ```
 
-| format | backend library                             | library crate extension |
-| ------ | ------------------------------------------- | ----------------------- |
-| jpeg   | [mozjpeg](https://crates.io/crates/mozjpeg) | Extension::Jpeg         |
-| png    | [oxipng](https://crates.io/crates/oxipng)   | Extension::Png          |
-| webp   | [webp](https://crates.io/crates/webp)       | Extension::Webp         |
-| bmp    | [image](https://crates.io/crates/image)     | Extension::Bmp          |
+| format | backend library                                       | library crate extension              |
+| ------ | ----------------------------------------------------- | ------------------------------------ |
+| jpeg   | [jpeg-encoder](https://crates.io/crates/jpeg-encoder) | Extension::Jpeg or Extension::Jpg *  |
+| png    | [oxipng](https://crates.io/crates/oxipng)             | Extension::Png                       |
+| webp   | [webp](https://crates.io/crates/webp)                 | Extension::Webp                      |
+| bmp    | [image](https://crates.io/crates/image)               | Extension::Bmp                       |
+
+\* The ``rusimg::Extension::Jpeg`` and ``rusimg::Extension::Jpg`` are the same, but file names will be saved as ``.jpeg`` and ``.jpg`` respectively.
 
 ### Image compression
 
@@ -98,7 +100,7 @@ Resize images.
 The resize ratio can be specified by calling the ``rusimg::RusImg.resize()`` function.
 
 ```rust
-pub fn resize(&mut self, resize_ratio: u8) -> Result<ImgSize, RusimgError>;
+pub fn resize(&mut self, ratio: f32) -> Result<ImgSize, RusimgError>;
 ```
 
 ### Image Cropping
@@ -108,7 +110,8 @@ Crop images.
 The crop size can be specified by calling the ``rusimg::RusImg.trim()`` or ``rusimg::RusImg.trim_rect()`` function.
 
 ```rust
-pub fn trim(&mut self, trim: Rect) -> Result<ImgSize, RusimgError>;
+pub fn trim(&mut self, trim_x: u32, trim_y: u32, trim_w: u32, trim_h: u32) -> Result<ImgSize, RusimgError>;
+pub fn trim_rect(&mut self, trim_area: Rect) -> Result<ImgSize, RusimgError>;
 ```
 
 ### Grayscale Conversion
@@ -118,7 +121,7 @@ Convert images to grayscale.
 The grayscale conversion can be specified by calling the ``rusimg::RusImg.grayscale()`` function.
 
 ```rust
-pub fn grayscale(&mut self);
+pub fn grayscale(&mut self) -> Result<(), RusimgError>;
 ```
 
 ### Save the image
@@ -223,207 +226,5 @@ impl BackendTrait for MyBmpImage {
         ...
     }
     ...
-}
-```
-
-## Data types
-
-### Structs and implements
-
-#### struct RusImg
-
-struct ``RusImg`` holds the file extension and the image data (``BackendTrait``).  
-``BackendTrait`` is a trait that contains the image processing functions, but struct ``RusImg`` implements these wrapper functions.
-
-```rust
-pub struct RusImg {
-    extension: Extension,
-    data: Box<(dyn BackendTrait)>,
-}
-```
-
-##### struct RusImg implements
-
-struct ``RusImg`` implements following functions.
-
-```rust
-impl RusImg {
-    /// Open an image file.
-    /// This function will open an image file and return a RusImg object.
-    /// The image file will be opened based on the file extension.
-    pub fn open(path: &Path) -> Result<Self, RusimgError>;
-
-    /// Create a new image from a DynamicImage object.
-    /// This function will create a new image object based on the file extension.
-    /// It will return a RusImg object.
-    pub fn new(extension: &Extension, image: DynamicImage) -> Result<Self, RusimgError>;
-
-    /// Create a new RusImg object from an Extension and a BaclendTrait object.
-    /// This function is for external formats.
-    /// It will return a RusImg object.
-    pub fn assemble(extension: &Extension, data: Box<(dyn BackendTrait)>) -> Result<Self, RusimgError>;
-
-    /// Get image size.
-    pub fn get_image_size(&self) -> Result<ImgSize, RusimgError>;
-
-    /// Resize an image.
-    /// It must be called after open_image().
-    /// Set ratio to 100 to keep the original size.
-    pub fn resize(&mut self, ratio: u8) -> Result<ImgSize, RusimgError>;
-
-    /// Trim an image. Set the trim area with four u32 values: x, y, w, h.
-    /// It must be called after open_image().
-    pub fn trim(&mut self, trim_x: u32, trim_y: u32, trim_w: u32, trim_h: u32) -> Result<ImgSize, RusimgError>;
-    /// Trim an image. Set the trim area with a rusimg::Rect object.
-    /// It must be called after open_image().
-    pub fn trim_rect(&mut self, trim_area: Rect) -> Result<ImgSize, RusimgError>;
-
-    /// Grayscale an image.
-    /// It must be called after open_image().
-    pub fn grayscale(&mut self) -> Result<(), RusimgError>;
-
-    /// Compress an image.
-    /// It must be called after open_image().
-    /// Set quality to 100 to keep the original quality.
-    pub fn compress(&mut self, quality: Option<f32>) -> Result<(), RusimgError>;
-
-    /// Convert an image to another format.
-    /// And replace the original image with the new one.
-    /// It must be called after open_image().
-    pub fn convert(&mut self, new_extension: &Extension) -> Result<(), RusimgError>;
-
-    /// Set a DynamicImage to an Img.
-    pub fn set_dynamic_image(&mut self, image: DynamicImage) -> Result<(), RusimgError>;
-
-    /// Get a DynamicImage from an Img.
-    pub fn get_dynamic_image(&mut self) -> Result<DynamicImage, RusimgError>;
-
-    /// Get file extension.
-    pub fn get_extension(&self) -> Extension;
-
-    /// Get input file path.
-    pub fn get_input_filepath(&self) -> PathBuf;
-
-    /// Save an image to a file.
-    /// If path is None, the original file will be overwritten.
-    pub fn save_image(&mut self, path: Option<&str>) -> Result<SaveStatus, RusimgError>;
-}
-```
-
-#### Rect
-
-Struct ``Rect`` is used to specify the crop area.  
-``rusimg::RusImg.trim_rect()`` needs a ``Rect`` object to specify the crop area.
-
-```rust
-#[derive(Debug, Clone, PartialEq)]
-pub struct Rect {
-    pub x: u32,
-    pub y: u32,
-    pub w: u32,
-    pub h: u32,
-}
-```
-
-#### ImgSize
-
-Struct ``ImgSize`` is used to get the image size.  
-``rusimg::RusImg.get_image_size()``, ``rusimg::RusImg.resize()``, ``rusimg::RusImg.trim()``, and ``rusimg::RusImg.trim_rect()`` return this struct.
-
-```rust
-#[derive(Debug, Clone, PartialEq, Copy, Default)]
-pub struct ImgSize {
-    pub width: usize,
-    pub height: usize,
-}
-```
-
-#### SaveStatus
-
-Struct ``SaveStatus`` is used for tracking the status of saving an image.  
-It contains the output file path, the file size before saving, and the file size after saving.  
-If the image has compression, the file size after saving will be different from the file size before saving.  
-``rusimg::RusImg.save_image()`` returns this enum.
-
-```rust
-#[derive(Debug, Clone, PartialEq)]
-pub struct SaveStatus {
-    pub output_path: Option<PathBuf>,
-    pub before_filesize: u64,
-    pub after_filesize: Option<u64>,
-}
-```
-
-### Enum
-
-#### Extension
-
-Enum ``Extension`` indicates the file extension.  
-ExternalFormat(String) is provided for the library crate users to use if they wish to implement their own alternate image file format.
-
-```rust
-#[derive(Debug, Clone, PartialEq)]
-pub enum Extension {
-    Bmp,
-    Jpeg,
-    Png,
-    Webp,
-    ExternalFormat(String),
-}
-impl fmt::Display for Extension {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            Extension::Bmp => write!(f, "bmp"),
-            Extension::Jpeg => write!(f, "jpeg"),
-            Extension::Png => write!(f, "png"),
-            Extension::Webp => write!(f, "webp"),
-            Extension::ExternalFormat(s) => write!(f, "{}", s),
-        }
-    }
-}
-```
-
-### Trait
-
-#### trait BackendTrait
-
-``BackendTrait`` is a trait that contains the image processing functions.
-
-```rust
-pub trait BackendTrait {
-    /// Import an image from a DynamicImage object.
-    fn import(image: DynamicImage, source_path: PathBuf, source_metadata: Metadata) -> Result<Self, RusimgError> where Self: Sized;
-    /// Open an image from a image buffer.
-    /// The ``path`` parameter is the file path of the image, but it is used for copying the file path to the object.
-    /// This returns a RusImg object.
-    fn open(path: PathBuf, image_buf: Vec<u8>, metadata: Metadata) -> Result<Self, RusimgError> where Self: Sized;
-    /// Save the image to a file to the ``path``.
-    fn save(&mut self, path: Option<PathBuf>) -> Result<(), RusimgError>;
-    /// Compress the image with the quality parameter.
-    fn compress(&mut self, quality: Option<f32>) -> Result<(), RusimgError>;
-    /// Resize the image with the resize_ratio parameter.
-    fn resize(&mut self, resize_ratio: u8) -> Result<ImgSize, RusimgError>;
-    /// Trim the image with the trim parameter.
-    /// The trim parameter is a Rect object.
-    fn trim(&mut self, trim: Rect) -> Result<ImgSize, RusimgError>;
-    /// Grayscale the image.
-    fn grayscale(&mut self);
-    /// Set a image::DynamicImage to the image object.
-    /// After setting the image, the image object will be updated.
-    fn set_dynamic_image(&mut self, image: DynamicImage) -> Result<(), RusimgError>;
-    /// Get a image::DynamicImage from the image object.
-    fn get_dynamic_image(&mut self) -> Result<DynamicImage, RusimgError>;
-    /// Get the source file path.
-    fn get_source_filepath(&self) -> PathBuf;
-    /// Get the destination file path.
-    fn get_destination_filepath(&self) -> Option<PathBuf>;
-    /// Get the source metadata.
-    fn get_metadata_src(&self) -> Metadata;
-    /// Get the destination metadata.
-    fn get_metadata_dest(&self) -> Option<Metadata>;
-    /// Get the image size.
-    fn get_size(&self) -> ImgSize;
-    /// Get a file path for saving an image.
-    fn get_save_filepath(&self, source_filepath: &PathBuf, destination_filepath: Option<PathBuf>, new_extension: &String) -> Result<PathBuf, RusimgError>;
 }
 ```
