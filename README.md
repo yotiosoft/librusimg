@@ -229,3 +229,9 @@ impl BackendTrait for MyBmpImage {
     ...
 }
 ```
+
+## License
+
+This project is licensed under the MIT License or Apache License 2.0.  
+- For the MIT License, see [LICENSE-MIT](LICENSE-MIT) file.
+- For the Apache License 2.0, see [LICENSE-APACHE](LICENSE-APACHE) file.
