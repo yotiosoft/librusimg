@@ -1,5 +1,6 @@
 # librusimg
 
+![Crates.io Version](https://img.shields.io/crates/v/librusimg)
 [![Rust](https://github.com/yotiosoft/librusimg/actions/workflows/rust.yml/badge.svg)](https://github.com/yotiosoft/librusimg/actions/workflows/rust.yml)
 
 An integrated image processing, conversion, and compression library for BMP, JPEG, PNG, and WebP formats for Rust.
