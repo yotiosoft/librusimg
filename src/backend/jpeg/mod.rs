@@ -70,7 +70,7 @@ impl BackendTrait for JpegImage {
         let quality = if let Some(quality) = self.required_quality {
             quality
         } else {
-            75.0
+            100.0
         };
         let encoder = Encoder::new_file(&save_path, quality as u8).map_err(|e| RusimgError::FailedToCreateFile(e.to_string()))?;
         encoder.encode(&self.image.to_rgb8(), self.size.width as u16, self.size.height as u16, ColorType::Rgb).map_err(|e| RusimgError::FailedToSaveImage(e.to_string()))?;
@@ -86,7 +86,7 @@ impl BackendTrait for JpegImage {
     /// Because the jpeg_encoder crate compresses the image when saving it, the compress() method does not need to do anything.
     /// So this method only sets the quality value.
     fn compress(&mut self, quality: Option<f32>) -> Result<(), RusimgError> {
-        let quality = quality.unwrap_or(75.0);  // default quality: 75.0
+        let quality = quality.unwrap_or(100.0);  // default quality: 75.0
         self.required_quality = Some(quality);
         self.operations_count += 1;
         Ok(())
