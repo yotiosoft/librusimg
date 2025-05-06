@@ -67,7 +67,7 @@ pub trait BackendTrait {
     /// 
     /// returns:
     /// - ImgSize object
-    fn resize(&mut self, resize_ratio: u8) -> Result<ImgSize, RusimgError>;
+    fn resize(&mut self, resize_ratio: f32) -> Result<ImgSize, RusimgError>;
     /// Trim the image with the trim parameter.
     /// The trim parameter is a Rect object.
     /// 

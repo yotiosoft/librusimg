@@ -57,7 +57,7 @@ impl RusImg {
     /// It must be called after open_image().
     /// Set ratio to 100 to keep the original size.
     /// This uses the ``resize()`` function from ``BackendTrait``.
-    pub fn resize(&mut self, ratio: u8) -> Result<ImgSize, RusimgError> {
+    pub fn resize(&mut self, ratio: f32) -> Result<ImgSize, RusimgError> {
         let size = self.data.resize(ratio)?;
         Ok(size)
     }
@@ -249,7 +249,7 @@ mod tests {
         generate_test_image(filename, width, height);
         let path = Path::new(filename);
         let mut img = RusImg::open(path).unwrap();
-        let size = img.resize(50).unwrap();
+        let size = img.resize(50.0).unwrap();
         assert_eq!(size.width, 50);
         assert_eq!(size.height, 50);
         std::fs::remove_file(filename).unwrap();

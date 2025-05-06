@@ -140,8 +140,7 @@ impl BackendTrait for PngImage {
     }
 
     /// Resize the image.
-    /// Set the resize_ratio between 1 and 100.
-    fn resize(&mut self, resize_ratio: u8) -> Result<ImgSize, RusimgError> {
+    fn resize(&mut self, resize_ratio: f32) -> Result<ImgSize, RusimgError> {
         let nwidth = (self.width as f32 * (resize_ratio as f32 / 100.0)) as usize;
         let nheight = (self.height as f32 * (resize_ratio as f32 / 100.0)) as usize;
 

@@ -113,8 +113,7 @@ impl BackendTrait for JpegImage {
     }
 
     /// Resize the image.
-    /// Set the resize_ratio between 1 and 100.
-    fn resize(&mut self, resize_ratio: u8) -> Result<ImgSize, RusimgError> {
+    fn resize(&mut self, resize_ratio: f32) -> Result<ImgSize, RusimgError> {
         let nwidth = (self.size.width as f32 * (resize_ratio as f32 / 100.0)) as usize;
         let nheight = (self.size.height as f32 * (resize_ratio as f32 / 100.0)) as usize;
         
