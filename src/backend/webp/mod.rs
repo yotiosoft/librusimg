@@ -23,7 +23,7 @@ pub struct WebpImage {
 impl BackendTrait for WebpImage {
     /// Import an image from a DynamicImage object.
     fn import(image: Option<DynamicImage>, source_path: Option<PathBuf>, source_metadata: Option<Metadata>) -> Result<Self, RusimgError> {
-        let image = image.ok_or(RusimgError::ImageNotSpecified)?; // DynamicImage::new() ではなく、DynamicImage::open() で開く
+        let image = image.ok_or(RusimgError::ImageNotSpecified)?;
         let (width, height) = (image.width() as usize, image.height() as usize);
 
         Ok(Self {
@@ -42,9 +42,9 @@ impl BackendTrait for WebpImage {
 
     /// Open an image from a image buffer.
     fn open(path: Option<PathBuf>, image_buf: Option<Vec<u8>>, metadata: Option<Metadata>) -> Result<Self, RusimgError> {
-        let path = path.ok_or(RusimgError::ImageNotSpecified)?; // 画像のパスが指定されていない場合はエラー
-        let image_buf = image_buf.ok_or(RusimgError::ImageNotSpecified)?; // 画像のバイナリデータが指定されていない場合はエラー
-        let metadata = metadata.ok_or(RusimgError::ImageNotSpecified)?; // 画像のメタデータが指定されていない場合はエラー
+        let path = path.ok_or(RusimgError::ImageNotSpecified)?; // If the image path is not specified, return an error.
+        let image_buf = image_buf.ok_or(RusimgError::ImageNotSpecified)?; // If the image buffer is not specified, return an error.
+        let metadata = metadata.ok_or(RusimgError::ImageNotSpecified)?; // If the metadata is not specified, return an error.
         
         let webp_decoder = dep_webp::Decoder::new(&image_buf).decode();
         if let Some(webp_decoder) = webp_decoder {
@@ -73,7 +73,7 @@ impl BackendTrait for WebpImage {
     fn save(&mut self, path: Option<PathBuf>) -> Result<(), RusimgError> {
         let save_path = Self::get_save_filepath(&self, &self.filepath_input, path, &"webp".to_string())?;
 
-        // 元が webp かつ操作回数が 0 なら encode しない
+        // If the source image is webp and the number of operations is 0, do not encode it.
         let source_is_webp = if let Some(filepath_input) = &self.filepath_input {
             Path::new(filepath_input).extension().and_then(|s| s.to_str()).unwrap_or("").to_string() == "webp"
         } else {
@@ -91,13 +91,13 @@ impl BackendTrait for WebpImage {
 
         // quality
         let quality = if let Some(q) = self.required_quality {
-            q       // 指定されていればその値
+            q       // If the quality is specified, use it.
         }
         else {
-            75.0    // 既定: 100.0（最高品質, compress を必要としない場合）
+            75.0    // If the quality is not specified, use the default value.
         };
        
-        // DynamicImage を （圧縮＆）保存
+        // Compress and save the image
         let encoded_webp = dep_webp::Encoder::from_rgba(&self.image.to_rgba8(), self.image.width(), self.image.height()).encode(quality);
 
         let mut file = std::fs::File::create(&save_path).map_err(|e| RusimgError::FailedToCreateFile(e.to_string()))?;

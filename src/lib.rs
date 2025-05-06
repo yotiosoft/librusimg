@@ -197,7 +197,7 @@ mod tests {
     use std::path::Path;
     use image::{ImageBuffer, Rgb};
 
-    // 画像を生成する関数
+    // Generate a test image with the specified filename, width, and height.
     fn generate_test_image(filename: &str, width: u32, height: u32) {
         let mut img: ImageBuffer<Rgb<u8>, Vec<u8>> = ImageBuffer::new(width, height);
         for x in 0..width {

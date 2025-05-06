@@ -45,9 +45,9 @@ impl BackendTrait for PngImage {
 
     /// Open an image from a image buffer.
     fn open(path: Option<PathBuf>, image_buf: Option<Vec<u8>>, metadata: Option<Metadata>) -> Result<Self, RusimgError> {
-        let path = path.ok_or(RusimgError::ImageNotSpecified)?; // 画像のパスが指定されていない場合はエラー
-        let image_buf = image_buf.ok_or(RusimgError::ImageNotSpecified)?; // 画像のバイナリデータが指定されていない場合はエラー
-        let metadata = metadata.ok_or(RusimgError::ImageNotSpecified)?; // 画像のメタデータが指定されていない場合はエラー
+        let path = path.ok_or(RusimgError::ImageNotSpecified)?; // If the image path is not specified, return an error.
+        let image_buf = image_buf.ok_or(RusimgError::ImageNotSpecified)?; // If the image buffer is not specified, return an error.
+        let metadata = metadata.ok_or(RusimgError::ImageNotSpecified)?; // If the metadata is not specified, return an error.
         
         let image = image::load_from_memory(&image_buf).map_err(|e| RusimgError::FailedToOpenImage(e.to_string()))?;
         let (width, height) = (image.width() as usize, image.height() as usize);
@@ -70,12 +70,12 @@ impl BackendTrait for PngImage {
     fn save(&mut self, path: Option<PathBuf>) -> Result<(), RusimgError> {
         let save_path = Self::get_save_filepath(&self, &self.filepath_input, path, &"png".to_string())?;
         
-        // image_bytes == None の場合、DynamicImage を 保存
+        // If image_bytes == None, save DynamicImage
         if self.image_bytes.is_none() {
             self.image.save(&save_path).map_err(|e| RusimgError::FailedToSaveImage(e.to_string()))?;
             self.metadata_output = Some(std::fs::metadata(&save_path).map_err(|e| RusimgError::FailedToGetMetadata(e.to_string()))?);
         }
-        // image_bytes != None の場合、oxipng で圧縮したバイナリデータを保存
+        // If image_bytes != None, save the compressed binary data with oxipng
         else {
             let mut file = std::fs::File::create(&save_path).map_err(|e| RusimgError::FailedToCreateFile(e.to_string()))?;
             file.write_all(&self.image_bytes.as_ref().unwrap()).map_err(|e| RusimgError::FailedToWriteFIle(e.to_string()))?;
@@ -91,7 +91,7 @@ impl BackendTrait for PngImage {
     /// quality: Option<f32> 0.0 - 100.0
     /// Because oxipng supports only 6 levels of compression, the quality value is converted to a level value.
     fn compress(&mut self, quality: Option<f32>) -> Result<(), RusimgError> {
-        // quality の値に応じて level を設定
+        // Set the level according to the value of quality
         let level = if let Some(q) = quality {
             if q <= 17.0 {
                 1
