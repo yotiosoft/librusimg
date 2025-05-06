@@ -2,7 +2,7 @@
 name = "librusimg"
 version = "0.1.0"
 authors = ["yotio <yotio@yotiosoft.com>"]
-description = "An integrated image processing library for BMP, JPEG, PNG, and WebP formats. This library was developed for the Rusimg project, but it is open for use in other projects as well."
+description = "A unified image processing library with a consistent API for BMP, JPEG, PNG, and WebP. Originally developed for my project Rusimg, but fully usable as a standalone crate."
 license = "MIT OR Apache-2.0"
 edition = "2021"
 autobins = true
