@@ -66,17 +66,15 @@ impl BackendTrait for JpegImage {
     fn save(&mut self, path: Option<PathBuf>) -> Result<(), RusimgError> {
         let save_path = Self::get_save_filepath(&self, &self.filepath_input, path, &self.extension_str)?;
 
-        // If compression is specified, save with compression (using jpeg_encoder crate)
-        if let Some(quality) = self.required_quality {
-            let encoder = Encoder::new_file(&save_path, quality as u8).map_err(|e| RusimgError::FailedToCreateFile(e.to_string()))?;
-            encoder.encode(&self.image.to_rgb8(), self.size.width as u16, self.size.height as u16, ColorType::Rgb).map_err(|e| RusimgError::FailedToSaveImage(e.to_string()))?;
-            self.metadata_output = Some(std::fs::metadata(&save_path).map_err(|e| RusimgError::FailedToGetMetadata(e.to_string()))?);
-        }
-        // If compression is not specified, save normally
-        else {
-            self.image.save(&save_path).map_err(|e| RusimgError::FailedToSaveImage(e.to_string()))?;
-            self.metadata_output = Some(std::fs::metadata(&save_path).map_err(|e| RusimgError::FailedToGetMetadata(e.to_string()))?);
-        }
+        // If compression is not specified, set the default quality to 75.0
+        let quality = if let Some(quality) = self.required_quality {
+            quality
+        } else {
+            75.0
+        };
+        let encoder = Encoder::new_file(&save_path, quality as u8).map_err(|e| RusimgError::FailedToCreateFile(e.to_string()))?;
+        encoder.encode(&self.image.to_rgb8(), self.size.width as u16, self.size.height as u16, ColorType::Rgb).map_err(|e| RusimgError::FailedToSaveImage(e.to_string()))?;
+        self.metadata_output = Some(std::fs::metadata(&save_path).map_err(|e| RusimgError::FailedToGetMetadata(e.to_string()))?);
 
         self.filepath_output = Some(save_path);
 
