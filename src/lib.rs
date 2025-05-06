@@ -58,6 +58,10 @@ impl RusImg {
     /// Set ratio to 100 to keep the original size.
     /// This uses the ``resize()`` function from ``BackendTrait``.
     pub fn resize(&mut self, ratio: f32) -> Result<ImgSize, RusimgError> {
+        if ratio <= 0.0 {
+            return Err(RusimgError::InvalidResizeRatio);
+        }
+
         let size = self.data.resize(ratio)?;
         Ok(size)
     }
@@ -553,8 +557,30 @@ mod tests {
     }
 
     #[test]
+    fn test_err_invalid_resize_ratio() {
+        let filename = "test_image18.png";
+        let width = 100;
+        let height = 100;
+        generate_test_image(filename, width, height);
+        let path = Path::new(filename);
+        let mut img = RusImg::open(path).unwrap();
+        let result = img.resize(0.0);
+        assert!(result.is_err());
+        if let Err(e) = result {
+            if let RusimgError::InvalidResizeRatio = e {
+                // Expected error
+            } else {
+                panic!("Unexpected error: {:?}", e);
+            }
+        } else {
+            panic!("Expected an error, but got Ok");
+        }
+        std::fs::remove_file(filename).unwrap();
+    }
+
+    #[test]
     fn test_err_image_format_cannot_be_compressed() {
-        let filename = "test_image18.bmp";
+        let filename = "test_image19.bmp";
         let width = 100;
         let height = 100;
         generate_test_image(filename, width, height);
@@ -576,7 +602,7 @@ mod tests {
 
     #[test]
     fn test_err_source_path_must_be_specified() {
-        let filename = "test_image19.png";
+        let filename = "test_image20.png";
         let width = 100;
         let height = 100;
         generate_test_image(filename, width, height);
