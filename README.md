@@ -67,12 +67,14 @@ The conversion format can be specified by calling the ``rusimg::RusImg.convert()
 pub fn convert(&mut self, new_extension: &Extension) -> Result<(), RusimgError>;
 ```
 
-| format | backend library                             | library crate extension |
-| ------ | ------------------------------------------- | ----------------------- |
-| jpeg   | [mozjpeg](https://crates.io/crates/mozjpeg) | Extension::Jpeg         |
-| png    | [oxipng](https://crates.io/crates/oxipng)   | Extension::Png          |
-| webp   | [webp](https://crates.io/crates/webp)       | Extension::Webp         |
-| bmp    | [image](https://crates.io/crates/image)     | Extension::Bmp          |
+| format | backend library                                       | library crate extension              |
+| ------ | ----------------------------------------------------- | ------------------------------------ |
+| jpeg   | [jpeg-encoder](https://crates.io/crates/jpeg-encoder) | Extension::Jpeg or Extension::Jpg *  |
+| png    | [oxipng](https://crates.io/crates/oxipng)             | Extension::Png                       |
+| webp   | [webp](https://crates.io/crates/webp)                 | Extension::Webp                      |
+| bmp    | [image](https://crates.io/crates/image)               | Extension::Bmp                       |
+
+\* The ``rusimg::Extension::Jpeg`` and ``rusimg::Extension::Jpg`` are the same, but file names will be saved as ``.jpeg`` and ``.jpg`` respectively.
 
 ### Image compression
 
